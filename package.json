@@ -1,0 +1,29 @@
+{
+  "name": "vena-cx-ai-cadence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.2.7",
+    "vitest": "4.0.15"
+  },
+  "overrides": {
+    "std-env": "3.10.0",
+    "tinyexec": "1.0.2"
+  }
+}
