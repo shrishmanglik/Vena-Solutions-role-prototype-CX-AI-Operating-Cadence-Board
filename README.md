@@ -1,4 +1,4 @@
-# Vena CX AI Operating Cadence Board
+# Vena CX AI Portfolio Operating System
 
 Role-specific prototype for the **Vena Solutions Customer Experience AI Architect** application.
 
@@ -7,9 +7,21 @@ GitHub repository: [https://github.com/shrishmanglik/Vena-Solutions-role-prototy
 
 ## Executive Summary
 
-This is a working prototype of a governed CX AI operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, funded, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
+This is a working prototype of a governed CX AI portfolio operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, funded, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
 
-The goal is not to simulate an AI chatbot. The goal is to show the judgment a Customer Experience AI Architect needs at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, and prove pilot value with economics and evidence.
+The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, and prove pilot value with economics and evidence.
+
+## Client POV Review
+
+From a Vena leadership perspective, the most useful version of this product is not a large dashboard. It is a weekly operating surface that answers five practical questions:
+
+1. What should we fund?
+2. What is blocked?
+3. Who owns the next action?
+4. What value is at stake?
+5. What evidence proves this is safe and useful enough to scale?
+
+The latest refinement adds that operating layer: a prioritized action queue, owner/due windows, value-at-stake signals, and a weekly review agenda. The prototype now behaves less like a presentation artifact and more like software a CX leadership team could use to run an AI adoption program.
 
 ## Vena-Specific Thesis
 
@@ -30,11 +42,13 @@ Public Vena sources used for alignment:
 - [Vena and Microsoft](https://www.venasolutions.com/platform/microsoft)
 - [Vena Copilot for Microsoft Teams announcement](https://www.venasolutions.com/newsroom/vena-sets-new-standard-in-agentic-ai-for-fpa-with-microsoft-teams-integration)
 
-## What The Prototype Shows
+## Feature List
 
 - A CX AI intake form for new workflow candidates.
 - A deterministic executive business-case engine with modeled annual value, ROI multiple, payback, confidence, and scale assumptions.
 - A simplified tabbed command-center UX with focused Executive, Portfolio, Pilot, and Workflow views.
+- A weekly operating action queue with severity, owner, due window, workflow, and value at stake.
+- A weekly governance agenda generated from portfolio economics and blocker state.
 - Deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
 - A governed board across intake, scored, build/QA, and released stages.
 - Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
@@ -47,6 +61,38 @@ Public Vena sources used for alignment:
 - Investment gates for fund/control/scale decisions.
 - Top scale-candidate ranking by modeled contribution and next governance gate.
 - Impact modeling for hours saved, time-to-value movement, adoption readiness, and data-quality lift.
+
+## How To Use It
+
+Use the app as a weekly CX AI portfolio review.
+
+### Executive Tab
+
+- Review modeled annual value, ROI, payback, confidence, and scale assumptions.
+- Adjust loaded CX cost, rollout scale, and adoption coverage.
+- Copy the board-ready business case memo.
+- Review the weekly action queue to see blockers, owners, due windows, and value at stake.
+- Use the weekly operating agenda to run the meeting.
+
+### Portfolio Tab
+
+- Add new AI workflow ideas through intake.
+- Score by value, feasibility, risk, strategic fit, urgency, and sensitivity.
+- Filter the backlog by stage or risk tier.
+- Select a card to inspect the workflow in detail.
+
+### Pilot Tab
+
+- Review why the approach fits Vena's Microsoft-native FP&A context.
+- Inspect the delivery architecture from discovery through source grounding, build, and scale.
+- Use the 30/60/90 roadmap and leadership asks to plan a controlled pilot.
+
+### Workflow Tab
+
+- Review the selected workflow's readiness gates.
+- Inspect source maps, tool/API actions, approvals, QA checks, release notes, adoption playbook, impact model, and audit log.
+- Move the workflow across intake, scored, build/QA, and released stages.
+- Copy the workflow-specific executive handoff brief.
 
 ## Demo Walkthrough
 

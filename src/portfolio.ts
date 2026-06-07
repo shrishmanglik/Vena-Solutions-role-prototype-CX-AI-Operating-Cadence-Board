@@ -34,6 +34,20 @@ export interface PortfolioContributor {
   nextGate: string;
 }
 
+export type OperatingActionSeverity = "Critical" | "High" | "Medium" | "Watch";
+
+export interface OperatingAction {
+  id: string;
+  workflowTitle: string;
+  owner: string;
+  cxArea: string;
+  severity: OperatingActionSeverity;
+  due: string;
+  action: string;
+  reason: string;
+  valueAtStake: number;
+}
+
 export const defaultPortfolioAssumptions: PortfolioAssumptions = {
   loadedHourlyCost: 125,
   scaleMultiplier: 4,
@@ -66,6 +80,22 @@ function clamp(value: number, min: number, max: number): number {
 
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
+}
+
+function severityWeight(severity: OperatingActionSeverity): number {
+  if (severity === "Critical") {
+    return 4;
+  }
+
+  if (severity === "High") {
+    return 3;
+  }
+
+  if (severity === "Medium") {
+    return 2;
+  }
+
+  return 1;
 }
 
 export function calculatePortfolioEconomics(
@@ -143,6 +173,138 @@ export function rankPortfolioContributors(
       };
     })
     .sort((a, b) => b.contribution - a.contribution);
+}
+
+export function buildOperatingActions(
+  opportunities: AiOpportunity[],
+  assumptions: PortfolioAssumptions = defaultPortfolioAssumptions
+): OperatingAction[] {
+  const contributionById = new Map(
+    rankPortfolioContributors(opportunities, assumptions).map((contributor) => [contributor.id, contributor.contribution])
+  );
+
+  return opportunities
+    .map((opportunity): OperatingAction => {
+      const openApproval = opportunity.approvals.find((approval) => approval.status === "Required");
+      const blockedCheck = opportunity.qaChecklist.find((check) => check.status === "Blocked");
+      const activeCheck = opportunity.qaChecklist.find((check) => check.status === "In review");
+      const pendingCheck = opportunity.qaChecklist.find((check) => check.status === "Not started");
+      const readiness = calculateGovernanceReadiness(opportunity);
+      const valueAtStake = contributionById.get(opportunity.id) ?? 0;
+
+      if (openApproval) {
+        const isSensitive = opportunity.sensitivity === "Sensitive" || opportunity.sensitivity === "Restricted";
+
+        return {
+          id: `${opportunity.id}-approval`,
+          workflowTitle: opportunity.title,
+          owner: openApproval.owner,
+          cxArea: opportunity.cxArea,
+          severity: isSensitive ? "Critical" : "High",
+          due: isSensitive ? "48 hrs" : "3 days",
+          action: `Clear approval: ${openApproval.label}`,
+          reason: "Unblocks governed pilot progress without weakening the human-review boundary.",
+          valueAtStake
+        };
+      }
+
+      if (blockedCheck) {
+        return {
+          id: `${opportunity.id}-qa-blocked`,
+          workflowTitle: opportunity.title,
+          owner: opportunity.owner,
+          cxArea: opportunity.cxArea,
+          severity: "Critical",
+          due: "48 hrs",
+          action: `Unblock QA: ${blockedCheck.label}`,
+          reason: "A blocked evaluation prevents release evidence from being trusted.",
+          valueAtStake
+        };
+      }
+
+      if (activeCheck) {
+        return {
+          id: `${opportunity.id}-qa-review`,
+          workflowTitle: opportunity.title,
+          owner: opportunity.owner,
+          cxArea: opportunity.cxArea,
+          severity: "High",
+          due: "3 days",
+          action: `Finish QA review: ${activeCheck.label}`,
+          reason: "Moves the workflow from promising to releasable with evidence.",
+          valueAtStake
+        };
+      }
+
+      if (pendingCheck) {
+        return {
+          id: `${opportunity.id}-qa-start`,
+          workflowTitle: opportunity.title,
+          owner: opportunity.owner,
+          cxArea: opportunity.cxArea,
+          severity: readiness < 70 ? "High" : "Medium",
+          due: "5 days",
+          action: `Start QA evidence: ${pendingCheck.label}`,
+          reason: "Creates the proof CX, IT/Security, and workflow owners need to scale safely.",
+          valueAtStake
+        };
+      }
+
+      if (opportunity.stage !== "Released") {
+        return {
+          id: `${opportunity.id}-release`,
+          workflowTitle: opportunity.title,
+          owner: opportunity.owner,
+          cxArea: opportunity.cxArea,
+          severity: "High",
+          due: "5 days",
+          action: "Schedule controlled pilot release",
+          reason: "The workflow has cleared core gates and needs measured pilot usage.",
+          valueAtStake
+        };
+      }
+
+      return {
+        id: `${opportunity.id}-measure`,
+        workflowTitle: opportunity.title,
+        owner: opportunity.owner,
+        cxArea: opportunity.cxArea,
+        severity: "Watch",
+        due: "7 days",
+        action: "Review adoption, edits, and cycle-time evidence",
+        reason: "Released workflows should earn scale through measured use, not launch status.",
+        valueAtStake
+      };
+    })
+    .sort((a, b) => {
+      const severityDelta = severityWeight(b.severity) - severityWeight(a.severity);
+
+      if (severityDelta !== 0) {
+        return severityDelta;
+      }
+
+      return b.valueAtStake - a.valueAtStake;
+    });
+}
+
+export function buildWeeklyOperatingAgenda(
+  opportunities: AiOpportunity[],
+  economics: PortfolioEconomics,
+  actions: OperatingAction[]
+): string[] {
+  const criticalActions = actions.filter((action) => action.severity === "Critical").length;
+  const openApprovals = sum(opportunities.map((opportunity) => countOpenApprovals(opportunity)));
+  const readyWorkflows = opportunities.filter(
+    (opportunity) => calculateGovernanceReadiness(opportunity) >= 70 && countOpenApprovals(opportunity) === 0
+  ).length;
+
+  return [
+    `Decide funding posture: ${formatCurrency(economics.annualizedValue)} modeled annual value, ${economics.roiMultiple}x ROI.`,
+    `Clear blockers: ${criticalActions} critical actions and ${openApprovals} open approval gates.`,
+    `Promote or hold: ${readyWorkflows} workflows are release-ready under current governance rules.`,
+    "Inspect source quality, QA evidence, and human-review exceptions before any scale decision.",
+    "Assign one owner and due date for each action before the meeting ends."
+  ];
 }
 
 export function formatCurrency(value: number): string {

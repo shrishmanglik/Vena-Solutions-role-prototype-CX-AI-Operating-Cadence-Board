@@ -2,6 +2,8 @@ import { FormEvent, useMemo, useState } from "react";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
 import {
   buildPortfolioBusinessCase,
+  buildOperatingActions,
+  buildWeeklyOperatingAgenda,
   calculatePortfolioEconomics,
   defaultPortfolioAssumptions,
   formatCompactCurrency,
@@ -89,6 +91,14 @@ function App() {
   const portfolioBusinessCase = useMemo(
     () => buildPortfolioBusinessCase(opportunities, portfolioEconomics, portfolioContributors),
     [opportunities, portfolioContributors, portfolioEconomics]
+  );
+  const operatingActions = useMemo(
+    () => buildOperatingActions(opportunities, portfolioAssumptions),
+    [opportunities, portfolioAssumptions]
+  );
+  const weeklyAgenda = useMemo(
+    () => buildWeeklyOperatingAgenda(opportunities, portfolioEconomics, operatingActions),
+    [opportunities, operatingActions, portfolioEconomics]
   );
 
   const visibleOpportunities = useMemo(() => {
@@ -206,7 +216,7 @@ function App() {
     <main className="app-shell">
       <header className="workspace-header">
         <div>
-          <p className="eyebrow">Vena Solutions role prototype</p>
+          <p className="eyebrow">Vena CX AI portfolio OS</p>
           <h1>CX AI Operating Command Center</h1>
           <p className="header-subtitle">
             A fundable portfolio system for governed AI workflows, CX adoption, executive controls, and measurable value.
@@ -224,7 +234,7 @@ function App() {
         <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />
         <Metric label="ROI" value={portfolioEconomics.roiMultiple.toFixed(1)} suffix="x" tone="amber" />
         <Metric label="Pilot ready" value={metrics.governanceReady} suffix="items" tone="blue" />
-        <Metric label="Open gates" value={metrics.openApprovals} suffix="approvals" tone="red" />
+        <Metric label="Action queue" value={operatingActions.filter((action) => action.severity !== "Watch").length} suffix="items" tone="red" />
       </section>
 
       <nav className="view-tabs" aria-label="Workspace views">
@@ -345,6 +355,36 @@ function App() {
                 <p>{gate.decision}</p>
               </article>
             ))}
+          </div>
+
+          <div className="action-queue-panel">
+            <div className="section-title-row">
+              <h3>Weekly action queue</h3>
+              <span>{operatingActions.filter((action) => action.severity === "Critical").length} critical</span>
+            </div>
+            <ol>
+              {operatingActions.slice(0, 5).map((action) => (
+                <li key={action.id}>
+                  <span className={`severity-pill ${action.severity.toLowerCase()}`}>{action.severity}</span>
+                  <div>
+                    <strong>{action.action}</strong>
+                    <p>{action.workflowTitle}</p>
+                    <em>
+                      {action.owner} | {action.due} | {formatCurrency(action.valueAtStake)}
+                    </em>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="weekly-agenda-panel">
+            <h3>Weekly operating review</h3>
+            <ol>
+              {weeklyAgenda.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { seedOpportunities } from "./data";
 import {
   buildPortfolioBusinessCase,
+  buildOperatingActions,
+  buildWeeklyOperatingAgenda,
   calculatePortfolioEconomics,
   defaultPortfolioAssumptions,
   rankPortfolioContributors
@@ -38,5 +40,24 @@ describe("portfolio economics", () => {
     expect(memo).toContain("Modeled annual value");
     expect(memo).toContain("90-day CX AI pilot");
     expect(memo).toContain("draft-first");
+  });
+
+  it("prioritizes operating actions by control urgency and value at stake", () => {
+    const actions = buildOperatingActions(seedOpportunities);
+
+    expect(actions.length).toBe(seedOpportunities.length);
+    expect(actions[0].severity).toBe("Critical");
+    expect(actions[0].action).toContain("Clear approval");
+    expect(actions.every((action) => action.owner.length > 0)).toBe(true);
+  });
+
+  it("builds a weekly operating agenda from economics and blocker state", () => {
+    const economics = calculatePortfolioEconomics(seedOpportunities);
+    const actions = buildOperatingActions(seedOpportunities);
+    const agenda = buildWeeklyOperatingAgenda(seedOpportunities, economics, actions);
+
+    expect(agenda).toHaveLength(5);
+    expect(agenda[0]).toContain("modeled annual value");
+    expect(agenda[1]).toContain("open approval");
   });
 });
