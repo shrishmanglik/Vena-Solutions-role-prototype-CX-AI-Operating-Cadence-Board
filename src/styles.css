@@ -119,7 +119,49 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
   gap: 12px;
-  margin: 18px 0;
+  margin: 18px 0 12px;
+}
+
+.view-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.view-tabs button {
+  display: grid;
+  gap: 4px;
+  min-height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 13px;
+  color: #344054;
+  background: #fff;
+  text-align: left;
+}
+
+.view-tabs button:hover,
+.view-tabs button.active {
+  border-color: var(--blue);
+  box-shadow: 0 10px 22px rgba(49, 95, 159, 0.11);
+}
+
+.view-tabs button.active {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f7ff 100%);
+}
+
+.view-tabs span {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.view-tabs em {
+  color: #667085;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .leadership-strip {
@@ -1193,6 +1235,7 @@ textarea:focus-visible {
   }
 
   .metric-strip,
+  .view-tabs,
   .leadership-strip,
   .alignment-grid,
   .value-metric-grid,

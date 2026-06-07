@@ -34,6 +34,7 @@ Public Vena sources used for alignment:
 
 - A CX AI intake form for new workflow candidates.
 - A deterministic executive business-case engine with modeled annual value, ROI multiple, payback, confidence, and scale assumptions.
+- A simplified tabbed command-center UX with focused Executive, Portfolio, Pilot, and Workflow views.
 - Deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
 - A governed board across intake, scored, build/QA, and released stages.
 - Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
@@ -51,15 +52,14 @@ Public Vena sources used for alignment:
 
 Start with the live site: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)
 
-1. Review the portfolio metrics and executive business case at the top.
+1. Start in the Executive tab and review the value case.
 2. Adjust scale assumptions for loaded CX cost, rollout scale, and adoption coverage.
 3. Copy the board-ready business case memo.
-4. Add a candidate workflow through the intake form.
-5. Filter the board by stage or risk tier.
-6. Open a workflow card and inspect the readiness gates.
-7. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
-8. Copy the executive handoff brief for the selected workflow.
-9. Walk through the 30/60/90 pilot plan and leadership asks.
+4. Move to the Portfolio tab to add a candidate workflow or filter the backlog.
+5. Select a workflow card to open the focused Workflow detail view.
+6. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
+7. Copy the executive handoff brief for the selected workflow.
+8. Use the Pilot tab to walk through alignment, architecture, 30/60/90 roadmap, and leadership asks.
 
 ## Governance Posture
 

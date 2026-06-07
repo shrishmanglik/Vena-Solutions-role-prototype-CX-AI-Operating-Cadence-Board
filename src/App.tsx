@@ -38,6 +38,15 @@ const cxAreas: CxArea[] = [
 const sensitivities: SensitivityLevel[] = ["Low", "Moderate", "Sensitive", "Restricted"];
 const riskFilters: Array<RiskTier | "All"> = ["All", "High", "Medium", "Low"];
 
+type ActiveView = "Executive" | "Portfolio" | "Pilot" | "Workflow";
+
+const workspaceViews: Array<{ id: ActiveView; label: string; summary: string }> = [
+  { id: "Executive", label: "Executive", summary: "Value case" },
+  { id: "Portfolio", label: "Portfolio", summary: "Intake and board" },
+  { id: "Pilot", label: "Pilot", summary: "Plan and controls" },
+  { id: "Workflow", label: "Workflow", summary: "Selected detail" }
+];
+
 const defaultDraft: IntakeDraft = {
   title: "Customer onboarding status brief",
   cxArea: "Professional Services",
@@ -63,6 +72,7 @@ function App() {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [businessCaseCopyState, setBusinessCaseCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [portfolioAssumptions, setPortfolioAssumptions] = useState(defaultPortfolioAssumptions);
+  const [activeView, setActiveView] = useState<ActiveView>("Executive");
 
   const selected = opportunities.find((item) => item.id === selectedId) ?? opportunities[0];
   const selectedReadiness = calculateGovernanceReadiness(selected);
@@ -144,11 +154,13 @@ function App() {
     setBusinessCaseCopyState("idle");
     setStageFilter("All");
     setRiskFilter("All");
+    setActiveView("Workflow");
   }
 
   function selectOpportunity(id: string) {
     setSelectedId(id);
     setCopyState("idle");
+    setActiveView("Workflow");
   }
 
   function moveSelected(stage: WorkflowStage) {
@@ -209,14 +221,28 @@ function App() {
       </header>
 
       <section className="metric-strip" aria-label="Cadence summary">
-        <Metric label="Avg priority" value={metrics.averagePriority} suffix="/100" tone="green" />
+        <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />
+        <Metric label="ROI" value={portfolioEconomics.roiMultiple.toFixed(1)} suffix="x" tone="amber" />
         <Metric label="Pilot ready" value={metrics.governanceReady} suffix="items" tone="blue" />
-        <Metric label="Avg readiness" value={metrics.averageReadiness} suffix="/100" tone="gray" />
-        <Metric label="Open approvals" value={metrics.openApprovals} suffix="gates" tone="red" />
-        <Metric label="Impact" value={metrics.weeklyHours} suffix="hrs/wk" tone="amber" />
-        <Metric label="Workflow volume" value={metrics.monthlyRuns} suffix="runs/mo" tone="gray" />
+        <Metric label="Open gates" value={metrics.openApprovals} suffix="approvals" tone="red" />
       </section>
 
+      <nav className="view-tabs" aria-label="Workspace views">
+        {workspaceViews.map((view) => (
+          <button
+            key={view.id}
+            type="button"
+            className={activeView === view.id ? "active" : ""}
+            onClick={() => setActiveView(view.id)}
+          >
+            <span>{view.label}</span>
+            <em>{view.summary}</em>
+          </button>
+        ))}
+      </nav>
+
+      {activeView === "Executive" && (
+        <>
       <section className="business-case-panel" aria-label="Executive business case">
         <div className="panel-heading command-heading">
           <div>
@@ -340,7 +366,10 @@ function App() {
           <p>{selectedGate}</p>
         </article>
       </section>
+        </>
+      )}
 
+      {activeView === "Pilot" && (
       <section className="alignment-grid" aria-label="Vena operating alignment">
         {alignmentSignals.map((signal) => (
           <article key={signal.label}>
@@ -351,7 +380,9 @@ function App() {
           </article>
         ))}
       </section>
+      )}
 
+      {activeView === "Portfolio" && (
       <div className="workspace-grid">
         <section className="panel intake-panel" aria-labelledby="intake-title">
           <div className="panel-heading">
@@ -527,7 +558,9 @@ function App() {
           </div>
         </section>
       </div>
+      )}
 
+      {activeView === "Pilot" && (
       <section className="operating-row" aria-label="Governance architecture and pilot roadmap">
         <article className="architecture-panel">
           <div className="panel-heading compact-heading">
@@ -600,7 +633,9 @@ function App() {
           </div>
         </article>
       </section>
+      )}
 
+      {activeView === "Workflow" && (
       <section className="detail-panel" aria-labelledby="detail-title">
         <div className="detail-title-row">
           <div>
@@ -698,6 +733,7 @@ function App() {
           </div>
         </div>
       </section>
+      )}
     </main>
   );
 }
