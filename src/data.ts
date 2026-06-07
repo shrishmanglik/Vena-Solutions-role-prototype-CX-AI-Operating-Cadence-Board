@@ -6,12 +6,12 @@ export const STAGES: WorkflowStage[] = ["Intake", "Scored", "Build / QA", "Relea
 export const seedOpportunities: AiOpportunity[] = [
   {
     id: "cx-001",
-    title: "Implementation kickoff workbook analyzer",
+    title: "Excel implementation workbook risk assistant",
     cxArea: "Professional Services",
     owner: "PS Operations",
     stage: "Build / QA",
     painPoint:
-      "Consultants lose time translating kickoff workbooks into implementation risks, owner tasks, and next-step notes.",
+      "Consultants need a faster way to turn customer kickoff workbooks and Teams notes into reviewed implementation risks, owner tasks, and next-step language.",
     workflowVolume: 44,
     sensitivity: "Sensitive",
     scores: calculateOpportunityScores({
@@ -23,15 +23,20 @@ export const seedOpportunities: AiOpportunity[] = [
       sensitivity: "Sensitive"
     }),
     knowledgeSources: [
+      { name: "Excel kickoff workbook schema", owner: "PS Operations", trust: "High" },
       { name: "Implementation playbooks", owner: "Professional Services", trust: "High" },
-      { name: "Kickoff workbook schema", owner: "PS Operations", trust: "High" },
-      { name: "Customer-specific notes", owner: "Consultant owner", trust: "Needs review" }
+      { name: "Teams kickoff notes", owner: "Consultant owner", trust: "Needs review" }
     ],
     integrationPlan: [
       {
-        system: "SharePoint",
-        action: "Read approved workbook fields only",
+        system: "SharePoint / Excel",
+        action: "Read approved workbook fields and model-readiness markers",
         approval: "Consultant confirms customer context before draft generation"
+      },
+      {
+        system: "Microsoft Teams",
+        action: "Prepare internal kickoff-risk recap for the implementation channel",
+        approval: "Implementation lead approves before posting"
       },
       {
         system: "CRM",
@@ -53,7 +58,7 @@ export const seedOpportunities: AiOpportunity[] = [
     releaseNotes: [
       "Release behind PS pilot group only.",
       "Draft output must show source fields and confidence gaps.",
-      "All customer-facing notes require consultant approval."
+      "All Teams posts and customer-facing notes require consultant approval."
     ],
     adoptionPlaybook: [
       "Run a 30-minute consultant enablement session.",
@@ -74,12 +79,12 @@ export const seedOpportunities: AiOpportunity[] = [
   },
   {
     id: "cx-002",
-    title: "Adoption risk brief copilot",
+    title: "Teams adoption-risk brief copilot",
     cxArea: "Customer Adoption",
     owner: "Customer Adoption Manager",
     stage: "Scored",
     painPoint:
-      "Adoption owners need a faster way to convert usage signals, open tasks, and renewal context into a reviewed account brief.",
+      "Adoption owners need a Teams-ready account brief that connects usage trends, renewal context, open tasks, and recommended next actions.",
     workflowVolume: 62,
     sensitivity: "Moderate",
     scores: calculateOpportunityScores({
@@ -91,15 +96,20 @@ export const seedOpportunities: AiOpportunity[] = [
       sensitivity: "Moderate"
     }),
     knowledgeSources: [
-      { name: "Usage summary export", owner: "Data team", trust: "Medium" },
+      { name: "Power BI adoption summary", owner: "Data team", trust: "Medium" },
       { name: "Adoption playbook", owner: "Customer Adoption", trust: "High" },
-      { name: "Renewal notes", owner: "Account team", trust: "Needs review" }
+      { name: "Renewal and account notes", owner: "Account team", trust: "Needs review" }
     ],
     integrationPlan: [
       {
         system: "Power BI",
         action: "Read usage trend and adoption segment",
         approval: "Data owner validates metric definitions"
+      },
+      {
+        system: "Microsoft Teams",
+        action: "Prepare private account-prep summary for the adoption manager",
+        approval: "CAM approves before sharing in a channel or meeting"
       },
       {
         system: "CRM",
@@ -118,7 +128,7 @@ export const seedOpportunities: AiOpportunity[] = [
     ],
     releaseNotes: [
       "Start as internal account-prep assist.",
-      "Do not send customer communication autonomously.",
+      "Do not send customer communication or Teams posts without CAM approval.",
       "Track brief adoption and manager edits."
     ],
     adoptionPlaybook: [
@@ -139,12 +149,12 @@ export const seedOpportunities: AiOpportunity[] = [
   },
   {
     id: "cx-003",
-    title: "Managed Services variance narrative draft",
+    title: "FP&A variance narrative review loop",
     cxArea: "Managed Services",
     owner: "Managed Services Lead",
     stage: "Released",
     painPoint:
-      "Analysts need a repeatable first draft for recurring variance commentary that stays tied to source rows and reviewer notes.",
+      "Analysts need a repeatable first draft for recurring FP&A variance commentary that stays tied to source rows, approved templates, and reviewer notes.",
     workflowVolume: 38,
     sensitivity: "Moderate",
     scores: calculateOpportunityScores({
@@ -157,14 +167,19 @@ export const seedOpportunities: AiOpportunity[] = [
     }),
     knowledgeSources: [
       { name: "Approved variance templates", owner: "Managed Services", trust: "High" },
-      { name: "Planning exports", owner: "Customer admin", trust: "Medium" },
+      { name: "Excel planning exports", owner: "Customer admin", trust: "Medium" },
       { name: "Reviewer notes", owner: "Service lead", trust: "High" }
     ],
     integrationPlan: [
       {
-        system: "Planning export",
+        system: "Excel / planning export",
         action: "Read variance rows and dimensional context",
         approval: "Analyst confirms source export is current"
+      },
+      {
+        system: "Power BI",
+        action: "Reference approved management-reporting trend context",
+        approval: "Service lead confirms trend interpretation before release"
       },
       {
         system: "Customer communication draft",
@@ -184,7 +199,7 @@ export const seedOpportunities: AiOpportunity[] = [
     releaseNotes: [
       "Released to internal analysts.",
       "Narratives remain drafts until reviewer approval.",
-      "Weekly impact review tracks edits and reuse."
+      "Weekly impact review tracks edits, reuse, and source-row exceptions."
     ],
     adoptionPlaybook: [
       "Add to Managed Services monthly close routine.",
@@ -204,12 +219,12 @@ export const seedOpportunities: AiOpportunity[] = [
   },
   {
     id: "cx-004",
-    title: "Enablement answer-bank review loop",
+    title: "Enablement answer-bank freshness router",
     cxArea: "Customer Enablement",
     owner: "Enablement Manager",
     stage: "Intake",
     painPoint:
-      "Enablement teams need a governed way to find stale answer-bank content and route edits back to the correct owner.",
+      "Enablement teams need a governed way to spot stale answer-bank content, compare it to release notes, and route updates to the right owner.",
     workflowVolume: 28,
     sensitivity: "Low",
     scores: calculateOpportunityScores({
@@ -223,7 +238,7 @@ export const seedOpportunities: AiOpportunity[] = [
     knowledgeSources: [
       { name: "Enablement answer bank", owner: "Customer Enablement", trust: "Medium" },
       { name: "Product release notes", owner: "Product", trust: "High" },
-      { name: "Support macro usage", owner: "Support Ops", trust: "Medium" }
+      { name: "Teams Q&A and support macro patterns", owner: "Support Ops", trust: "Medium" }
     ],
     integrationPlan: [
       {
@@ -232,7 +247,7 @@ export const seedOpportunities: AiOpportunity[] = [
         approval: "Content owner reviews before edit"
       },
       {
-        system: "Task queue",
+        system: "Teams / task queue",
         action: "Create owner review task",
         approval: "Enablement manager confirms owner mapping"
       }
@@ -249,7 +264,7 @@ export const seedOpportunities: AiOpportunity[] = [
     releaseNotes: [
       "Keep in intake until owner map is trusted.",
       "No content edits are published by automation.",
-      "Measure stale-content closure rate."
+      "Measure stale-content closure rate and false-positive rate."
     ],
     adoptionPlaybook: [
       "Review sample stale flags with enablement leads.",
@@ -284,19 +299,19 @@ export function createOpportunityFromDraft(draft: IntakeDraft, sequence: number)
     sensitivity: draft.sensitivity,
     scores,
     knowledgeSources: [
-      { name: `${draft.cxArea} process source`, owner: draft.owner || draft.cxArea, trust: "Needs review" },
-      { name: "Approved playbook or SOP", owner: draft.cxArea, trust: "Medium" },
-      { name: "Customer or workflow notes", owner: "Business owner", trust: "Needs review" }
+      { name: `${draft.cxArea} Microsoft 365 source`, owner: draft.owner || draft.cxArea, trust: "Needs review" },
+      { name: "Approved Vena CX playbook or SOP", owner: draft.cxArea, trust: "Medium" },
+      { name: "Teams, customer, or workflow notes", owner: "Business owner", trust: "Needs review" }
     ],
     integrationPlan: [
       {
-        system: "Source system export",
-        action: "Read approved fields only",
+        system: "SharePoint / Excel / Power BI",
+        action: "Read approved fields only with source citation",
         approval: "Business owner confirms source freshness"
       },
       {
-        system: "Workflow action",
-        action: "Prepare draft or task, never autonomous release",
+        system: "Teams / CRM task",
+        action: "Prepare draft or task for owner review",
         approval: "Human owner approves before write/send"
       }
     ],

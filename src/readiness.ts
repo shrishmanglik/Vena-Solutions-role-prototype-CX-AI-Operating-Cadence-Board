@@ -100,6 +100,7 @@ export function buildExecutiveBrief(opportunity: AiOpportunity): string {
     `Current gate: ${getNextGate(opportunity)}`,
     `Open approvals: ${openApprovals}`,
     `Trusted inputs: ${topSources || "Source map pending"}`,
+    `Vena posture: Microsoft-native, FP&A-aware, source-linked, and draft-first.`,
     `Action boundary: Draft, route, or prepare work only; human owner approves sensitive write/send steps.`,
     `Impact model: ${opportunity.impact.hoursSavedPerWeek} hrs/week saved, ${opportunity.impact.timeToValueDays} day time-to-value shift.`
   ].join("\n");

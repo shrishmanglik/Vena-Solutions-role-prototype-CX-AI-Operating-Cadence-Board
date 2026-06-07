@@ -1,72 +1,72 @@
-# Vena CX AI Cadence Board
+# Vena CX AI Operating Cadence Board
 
 Role-specific prototype for the **Vena Solutions Customer Experience AI Architect** application.
 
 Live website: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)  
 GitHub repository: [https://github.com/shrishmanglik/vena](https://github.com/shrishmanglik/vena)
 
-## Overview
+## Executive Summary
 
-This prototype demonstrates a governed operating cadence for AI work across a Customer Experience organization. It is designed as an interview walkthrough artifact: concise enough to explain in 20 minutes, but concrete enough to show how AI ideas become owned, scored, reviewed, released, and measured workflows.
+This is a working prototype of a governed CX AI operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
 
-The board models the path from **intake -> prioritization -> build/QA -> release -> adoption -> impact review** for post-sales workflows across:
+The goal is not to simulate an AI chatbot. The goal is to show the judgment a Customer Experience AI Architect needs at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, and prove pilot value with evidence.
 
-- Professional Services
-- Customer Adoption
-- Managed Services
-- Customer Enablement
+## Vena-Specific Thesis
 
-## Why This Fits The Role
+Vena publicly positions itself around Excel-native FP&A, governed AI agents, Microsoft-native collaboration, Power BI insights, Teams integration, Azure, and structured workflow controls. This prototype maps that product direction into the CX organization.
 
-Vena's Customer Experience AI Architect role calls for someone who can translate CX pain points into governed AI tools, prioritize the backlog, build production-grade workflows, coordinate with IT/Security/Product, and drive adoption.
+The system is designed around four operating beliefs:
 
-This prototype shows that operating model in miniature:
+- CX AI should live where Vena teams already work: Excel, Teams, Power BI, SharePoint, CRM, and Vena operating playbooks.
+- FP&A assistants need source lineage, financial context, and approved decision logic, not generic summarization.
+- Sensitive workflow actions should be draft-first, source-linked, audited, and human-approved.
+- AI adoption should be run like a measurable pilot portfolio, not a loose backlog of prompts.
 
-- AI opportunities are scored by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
-- Each workflow has source maps, owner assignments, human approval points, QA checks, release notes, and adoption guidance.
-- Sensitive actions are explicitly non-autonomous: the system can draft, route, or prepare work, but a human owner approves write/send actions.
-- Measurable impact is visible through hours saved, time-to-value movement, adoption readiness, and data quality lift.
+Public Vena sources used for alignment:
+
+- [Vena homepage](https://www.venasolutions.com/)
+- [Vena AI for Finance](https://www.venasolutions.com/product/copilot)
+- [Vena and Microsoft](https://www.venasolutions.com/platform/microsoft)
+- [Vena Copilot for Microsoft Teams announcement](https://www.venasolutions.com/newsroom/vena-sets-new-standard-in-agentic-ai-for-fpa-with-microsoft-teams-integration)
+
+## What The Prototype Shows
+
+- A CX AI intake form for new workflow candidates.
+- Deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
+- A governed board across intake, scored, build/QA, and released stages.
+- Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
+- Source maps for RAG and tool usage.
+- Human approval points for sensitive write/send actions.
+- QA and evaluation readiness.
+- Executive handoff briefs.
+- A 90-day pilot roadmap with evidence requirements.
+- A delivery architecture for discovery, source grounding, draft-first build, and scale decisions.
+- Impact modeling for hours saved, time-to-value movement, adoption readiness, and data-quality lift.
 
 ## Demo Walkthrough
 
 Start with the live site: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)
 
-1. Review the portfolio summary at the top of the page.
-2. Add a new workflow through the intake form.
-3. Use the board filters to inspect work by stage or risk tier.
-4. Open a workflow card and review the detail panel.
-5. Copy the executive handoff brief.
-6. Walk through the readiness gates, source map, tool/API plan, QA checklist, release notes, adoption playbook, impact model, and audit log.
-
-## Core Features
-
-- Deterministic opportunity scoring
-- Risk tiering with data-sensitivity penalty
-- Governance readiness scoring
-- Approval readiness, QA readiness, and source readiness
-- Next-gate recommendations
-- Copyable executive handoff brief
-- RAG / knowledge-source map
-- Tool and API action plan
-- Human approval points
-- QA and evaluation checklist
-- Release and handoff notes
-- Adoption playbook
-- Impact dashboard
-- Audit log
+1. Review the portfolio metrics and Vena alignment signals at the top.
+2. Add a candidate workflow through the intake form.
+3. Filter the board by stage or risk tier.
+4. Open a workflow card and inspect the readiness gates.
+5. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
+6. Copy the executive handoff brief for the selected workflow.
+7. Walk through the 30/60/90 pilot plan and leadership asks.
 
 ## Governance Posture
 
-This is intentionally deterministic-first.
+This prototype is intentionally deterministic-first.
 
 - No AI API calls are made at runtime.
-- No external messages are sent.
 - No customer data is stored.
+- No external messages are sent.
 - No autonomous write/send action is performed.
 - No generated image assets are used.
 - All sample data is fictional and role-specific.
 
-The prototype is a working demo of the operating cadence, not a claim of production deployment inside Vena.
+The prototype is a working demo of an operating cadence, not a claim of production deployment inside Vena.
 
 ## Tech Stack
 

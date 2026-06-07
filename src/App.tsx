@@ -10,6 +10,13 @@ import {
   getNextGate
 } from "./readiness";
 import { riskSortWeight } from "./scoring";
+import {
+  alignmentSignals,
+  architectureLanes,
+  executiveAsks,
+  pilotRoadmap,
+  platformFitByArea
+} from "./strategy";
 import type { AiOpportunity, CxArea, IntakeDraft, RiskTier, SensitivityLevel, WorkflowStage } from "./types";
 
 const cxAreas: CxArea[] = [
@@ -74,6 +81,7 @@ function App() {
     const governanceReady = opportunities.filter(
       (item) => calculateGovernanceReadiness(item) >= 70 && countOpenApprovals(item) === 0
     ).length;
+    const monthlyRuns = opportunities.reduce((total, item) => total + item.workflowVolume, 0);
     const weeklyHours = opportunities.reduce((total, item) => total + item.impact.hoursSavedPerWeek, 0);
     const averagePriority =
       opportunities.reduce((total, item) => total + item.scores.priority, 0) / opportunities.length;
@@ -86,6 +94,7 @@ function App() {
       buildQueue,
       openApprovals,
       governanceReady,
+      monthlyRuns,
       weeklyHours,
       averagePriority: Math.round(averagePriority),
       averageReadiness: Math.round(averageReadiness)
@@ -161,11 +170,11 @@ function App() {
 
       <section className="metric-strip" aria-label="Cadence summary">
         <Metric label="Avg priority" value={metrics.averagePriority} suffix="/100" tone="green" />
-        <Metric label="Gov ready" value={metrics.governanceReady} suffix="items" tone="blue" />
+        <Metric label="Pilot ready" value={metrics.governanceReady} suffix="items" tone="blue" />
         <Metric label="Avg readiness" value={metrics.averageReadiness} suffix="/100" tone="gray" />
-        <Metric label="Build / QA" value={metrics.buildQueue} suffix="items" tone="blue" />
         <Metric label="Open approvals" value={metrics.openApprovals} suffix="gates" tone="red" />
         <Metric label="Impact" value={metrics.weeklyHours} suffix="hrs/wk" tone="amber" />
+        <Metric label="Workflow volume" value={metrics.monthlyRuns} suffix="runs/mo" tone="gray" />
       </section>
 
       <section className="leadership-strip" aria-label="Portfolio operating summary">
@@ -184,6 +193,17 @@ function App() {
           <strong>{selected.title}</strong>
           <p>{selectedGate}</p>
         </article>
+      </section>
+
+      <section className="alignment-grid" aria-label="Vena operating alignment">
+        {alignmentSignals.map((signal) => (
+          <article key={signal.label}>
+            <span>{signal.label}</span>
+            <strong>{signal.headline}</strong>
+            <p>{signal.body}</p>
+            <em>{signal.proof}</em>
+          </article>
+        ))}
       </section>
 
       <div className="workspace-grid">
@@ -362,6 +382,79 @@ function App() {
         </section>
       </div>
 
+      <section className="operating-row" aria-label="Governance architecture and pilot roadmap">
+        <article className="architecture-panel">
+          <div className="panel-heading compact-heading">
+            <div>
+              <p className="eyebrow">Pilot architecture</p>
+              <h2>Governed CX AI delivery loop</h2>
+            </div>
+            <span className="release-contract">Draft-first, source-linked, human-approved</span>
+          </div>
+
+          <div className="architecture-lanes">
+            {architectureLanes.map((lane) => (
+              <section className="architecture-lane" key={lane.step}>
+                <span className="lane-step">{lane.step}</span>
+                <div>
+                  <h3>{lane.title}</h3>
+                  <p>{lane.owner}</p>
+                </div>
+                <div className="lane-columns">
+                  <div>
+                    <strong>Inputs</strong>
+                    <ul>
+                      {lane.inputs.map((input) => (
+                        <li key={input}>{input}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>Controls</strong>
+                    <ul>
+                      {lane.controls.map((control) => (
+                        <li key={control}>{control}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <em>{lane.outcome}</em>
+              </section>
+            ))}
+          </div>
+        </article>
+
+        <article className="roadmap-panel">
+          <div className="panel-heading compact-heading">
+            <div>
+              <p className="eyebrow">90-day motion</p>
+              <h2>Launch plan for Vena CX</h2>
+            </div>
+          </div>
+
+          <div className="roadmap-track">
+            {pilotRoadmap.map((milestone) => (
+              <section className="roadmap-item" key={milestone.window}>
+                <span>{milestone.window}</span>
+                <h3>{milestone.focus}</h3>
+                <p>{milestone.outcome}</p>
+                <strong>{milestone.proof}</strong>
+                <em>{milestone.owner}</em>
+              </section>
+            ))}
+          </div>
+
+          <div className="executive-asks">
+            <h3>Leadership asks</h3>
+            <ul>
+              {executiveAsks.map((ask) => (
+                <li key={ask}>{ask}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      </section>
+
       <section className="detail-panel" aria-labelledby="detail-title">
         <div className="detail-title-row">
           <div>
@@ -427,6 +520,7 @@ function App() {
             </div>
           </div>
 
+          <DetailList title="Vena platform fit" items={platformFitByArea[selected.cxArea]} />
           <DetailList title="RAG / source map" items={selected.knowledgeSources.map((source) => `${source.name} | ${source.owner} | ${source.trust}`)} />
           <DetailList title="Tool and API action plan" items={selected.integrationPlan.map((step) => `${step.system}: ${step.action}. Approval: ${step.approval}`)} />
           <DetailList title="Human approval points" items={selected.approvals.map((approval) => `${approval.label} | ${approval.owner} | ${approval.status}`)} />
