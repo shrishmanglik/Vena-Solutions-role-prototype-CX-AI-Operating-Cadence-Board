@@ -7,9 +7,9 @@ GitHub repository: [https://github.com/shrishmanglik/Vena-Solutions-role-prototy
 
 ## Executive Summary
 
-This is a working prototype of a governed CX AI operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
+This is a working prototype of a governed CX AI operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, funded, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
 
-The goal is not to simulate an AI chatbot. The goal is to show the judgment a Customer Experience AI Architect needs at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, and prove pilot value with evidence.
+The goal is not to simulate an AI chatbot. The goal is to show the judgment a Customer Experience AI Architect needs at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, and prove pilot value with economics and evidence.
 
 ## Vena-Specific Thesis
 
@@ -21,6 +21,7 @@ The system is designed around four operating beliefs:
 - FP&A assistants need source lineage, financial context, and approved decision logic, not generic summarization.
 - Sensitive workflow actions should be draft-first, source-linked, audited, and human-approved.
 - AI adoption should be run like a measurable pilot portfolio, not a loose backlog of prompts.
+- Executive sponsorship should be earned with a clear value model, payback view, investment gates, and a copy-ready business case.
 
 Public Vena sources used for alignment:
 
@@ -32,6 +33,7 @@ Public Vena sources used for alignment:
 ## What The Prototype Shows
 
 - A CX AI intake form for new workflow candidates.
+- A deterministic executive business-case engine with modeled annual value, ROI multiple, payback, confidence, and scale assumptions.
 - Deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
 - A governed board across intake, scored, build/QA, and released stages.
 - Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
@@ -41,19 +43,23 @@ Public Vena sources used for alignment:
 - Executive handoff briefs.
 - A 90-day pilot roadmap with evidence requirements.
 - A delivery architecture for discovery, source grounding, draft-first build, and scale decisions.
+- Investment gates for fund/control/scale decisions.
+- Top scale-candidate ranking by modeled contribution and next governance gate.
 - Impact modeling for hours saved, time-to-value movement, adoption readiness, and data-quality lift.
 
 ## Demo Walkthrough
 
 Start with the live site: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)
 
-1. Review the portfolio metrics and Vena alignment signals at the top.
-2. Add a candidate workflow through the intake form.
-3. Filter the board by stage or risk tier.
-4. Open a workflow card and inspect the readiness gates.
-5. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
-6. Copy the executive handoff brief for the selected workflow.
-7. Walk through the 30/60/90 pilot plan and leadership asks.
+1. Review the portfolio metrics and executive business case at the top.
+2. Adjust scale assumptions for loaded CX cost, rollout scale, and adoption coverage.
+3. Copy the board-ready business case memo.
+4. Add a candidate workflow through the intake form.
+5. Filter the board by stage or risk tier.
+6. Open a workflow card and inspect the readiness gates.
+7. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
+8. Copy the executive handoff brief for the selected workflow.
+9. Walk through the 30/60/90 pilot plan and leadership asks.
 
 ## Governance Posture
 
@@ -91,7 +97,7 @@ npm run typecheck
 npm run build
 ```
 
-Current verification coverage includes deterministic scoring and governance-readiness tests.
+Current verification coverage includes deterministic scoring, governance-readiness, strategy-layer, and portfolio-economics tests.
 
 ## Deployment
 

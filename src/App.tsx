@@ -1,6 +1,15 @@
 import { FormEvent, useMemo, useState } from "react";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
 import {
+  buildPortfolioBusinessCase,
+  calculatePortfolioEconomics,
+  defaultPortfolioAssumptions,
+  formatCompactCurrency,
+  formatCurrency,
+  investmentGates,
+  rankPortfolioContributors
+} from "./portfolio";
+import {
   buildExecutiveBrief,
   calculateApprovalReadiness,
   calculateGovernanceReadiness,
@@ -52,11 +61,25 @@ function App() {
   const [riskFilter, setRiskFilter] = useState<RiskTier | "All">("All");
   const [draft, setDraft] = useState<IntakeDraft>(defaultDraft);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [businessCaseCopyState, setBusinessCaseCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [portfolioAssumptions, setPortfolioAssumptions] = useState(defaultPortfolioAssumptions);
 
   const selected = opportunities.find((item) => item.id === selectedId) ?? opportunities[0];
   const selectedReadiness = calculateGovernanceReadiness(selected);
   const selectedBrief = buildExecutiveBrief(selected);
   const selectedGate = getNextGate(selected);
+  const portfolioEconomics = useMemo(
+    () => calculatePortfolioEconomics(opportunities, portfolioAssumptions),
+    [opportunities, portfolioAssumptions]
+  );
+  const portfolioContributors = useMemo(
+    () => rankPortfolioContributors(opportunities, portfolioAssumptions),
+    [opportunities, portfolioAssumptions]
+  );
+  const portfolioBusinessCase = useMemo(
+    () => buildPortfolioBusinessCase(opportunities, portfolioEconomics, portfolioContributors),
+    [opportunities, portfolioContributors, portfolioEconomics]
+  );
 
   const visibleOpportunities = useMemo(() => {
     return opportunities
@@ -105,12 +128,20 @@ function App() {
     setDraft((current) => ({ ...current, [field]: value }));
   }
 
+  function updatePortfolioAssumption<K extends keyof typeof portfolioAssumptions>(
+    field: K,
+    value: (typeof portfolioAssumptions)[K]
+  ) {
+    setPortfolioAssumptions((current) => ({ ...current, [field]: value }));
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const opportunity = createOpportunityFromDraft(draft, opportunities.length + 1);
     setOpportunities((current) => [opportunity, ...current]);
     setSelectedId(opportunity.id);
     setCopyState("idle");
+    setBusinessCaseCopyState("idle");
     setStageFilter("All");
     setRiskFilter("All");
   }
@@ -150,14 +181,23 @@ function App() {
     }
   }
 
+  async function copyPortfolioBusinessCase() {
+    try {
+      await navigator.clipboard.writeText(portfolioBusinessCase);
+      setBusinessCaseCopyState("copied");
+    } catch {
+      setBusinessCaseCopyState("failed");
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="workspace-header">
         <div>
           <p className="eyebrow">Vena Solutions role prototype</p>
-          <h1>CX AI Operating Cadence Board</h1>
+          <h1>CX AI Operating Command Center</h1>
           <p className="header-subtitle">
-            Business-facing AI transformation across services, adoption, managed services, and enablement.
+            A fundable portfolio system for governed AI workflows, CX adoption, executive controls, and measurable value.
           </p>
         </div>
         <div className="header-actions" aria-label="Operating cadence">
@@ -175,6 +215,112 @@ function App() {
         <Metric label="Open approvals" value={metrics.openApprovals} suffix="gates" tone="red" />
         <Metric label="Impact" value={metrics.weeklyHours} suffix="hrs/wk" tone="amber" />
         <Metric label="Workflow volume" value={metrics.monthlyRuns} suffix="runs/mo" tone="gray" />
+      </section>
+
+      <section className="business-case-panel" aria-label="Executive business case">
+        <div className="panel-heading command-heading">
+          <div>
+            <p className="eyebrow">Executive command center</p>
+            <h2>Million-dollar CX AI pilot case</h2>
+            <p>
+              A deterministic value model that ties governed CX workflows to annual capacity, customer acceleration,
+              control maturity, payback, and scale decisions.
+            </p>
+          </div>
+          <button className="secondary-button" type="button" onClick={copyPortfolioBusinessCase}>
+            {businessCaseCopyState === "copied"
+              ? "Copied"
+              : businessCaseCopyState === "failed"
+                ? "Copy failed"
+                : "Copy business case"}
+          </button>
+        </div>
+
+        <div className="business-case-grid">
+          <div className="value-metric-grid">
+            <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />
+            <Metric label="Net value" value={formatCompactCurrency(portfolioEconomics.netAnnualValue)} suffix="/yr" tone="blue" />
+            <Metric label="ROI" value={portfolioEconomics.roiMultiple.toFixed(1)} suffix="x" tone="amber" />
+            <Metric label="Payback" value={portfolioEconomics.paybackMonths} suffix="months" tone="gray" />
+            <Metric label="Capacity" value={portfolioEconomics.annualHoursRecovered.toLocaleString("en-US")} suffix="hrs/yr" tone="blue" />
+            <Metric label="Confidence" value={portfolioEconomics.confidenceScore} suffix="/100" tone="green" />
+          </div>
+
+          <div className="assumption-panel">
+            <h3>Scale assumptions</h3>
+            <Slider
+              label="Loaded CX cost"
+              value={portfolioAssumptions.loadedHourlyCost}
+              min={75}
+              max={175}
+              prefix="$"
+              suffix="/hr"
+              onChange={(value) => updatePortfolioAssumption("loadedHourlyCost", value)}
+            />
+            <Slider
+              label="Rollout scale"
+              value={portfolioAssumptions.scaleMultiplier}
+              min={1}
+              max={6}
+              suffix="x"
+              onChange={(value) => updatePortfolioAssumption("scaleMultiplier", value)}
+            />
+            <Slider
+              label="Adoption coverage"
+              value={portfolioAssumptions.adoptionCoverage}
+              min={40}
+              max={95}
+              suffix="%"
+              onChange={(value) => updatePortfolioAssumption("adoptionCoverage", value)}
+            />
+            <div className="value-breakdown">
+              <span>
+                Capacity value <strong>{formatCurrency(portfolioEconomics.capacityValue)}</strong>
+              </span>
+              <span>
+                Acceleration value <strong>{formatCurrency(portfolioEconomics.accelerationValue)}</strong>
+              </span>
+              <span>
+                Control value <strong>{formatCurrency(portfolioEconomics.controlValue)}</strong>
+              </span>
+              <span>
+                Pilot investment <strong>{formatCurrency(portfolioEconomics.pilotInvestment)}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div className="business-memo">
+            <div className="section-title-row">
+              <h3>Board-ready memo</h3>
+              <span>{portfolioEconomics.governanceReadyCount} workflows release-ready</span>
+            </div>
+            <pre>{portfolioBusinessCase}</pre>
+          </div>
+
+          <div className="scale-candidate-panel">
+            <h3>Scale candidates</h3>
+            <ol>
+              {portfolioContributors.slice(0, 3).map((candidate) => (
+                <li key={candidate.id}>
+                  <span>{formatCurrency(candidate.contribution)}</span>
+                  <strong>{candidate.title}</strong>
+                  <p>{candidate.nextGate}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="investment-gates">
+            <h3>Investment gates</h3>
+            {investmentGates.map((gate) => (
+              <article key={gate.label}>
+                <span>{gate.label}</span>
+                <strong>{gate.condition}</strong>
+                <p>{gate.decision}</p>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="leadership-strip" aria-label="Portfolio operating summary">
@@ -559,19 +705,31 @@ function App() {
 function Slider({
   label,
   value,
+  min = 0,
+  max = 100,
+  prefix = "",
+  suffix = "",
   onChange
 }: {
   label: string;
   value: number;
+  min?: number;
+  max?: number;
+  prefix?: string;
+  suffix?: string;
   onChange: (value: number) => void;
 }) {
   return (
     <label className="slider-field">
       <span>
         {label}
-        <strong>{value}</strong>
+        <strong>
+          {prefix}
+          {value}
+          {suffix}
+        </strong>
       </span>
-      <input type="range" min="0" max="100" value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      <input type="range" min={min} max={max} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   );
 }
@@ -612,7 +770,7 @@ function Metric({
   tone
 }: {
   label: string;
-  value: number;
+  value: number | string;
   suffix: string;
   tone: "green" | "blue" | "red" | "amber" | "gray";
 }) {
