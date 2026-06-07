@@ -1,13 +1,3 @@
-node_modules/
-dist/
-.vercel/
-.env
-.env.*
-*.local
-coverage/
-playwright-report/
-test-results/
-*.tsbuildinfo
 00-jd-original.md
 01-jd-analysis.md
 02-strategy.md
@@ -16,7 +6,11 @@ test-results/
 04-cover-letter.docx
 04-cover-letter.pdf
 05-portfolio-brief.md
+06-prototype-spec.md
 Shrish_manglik_resume.docx
 Shrish_manglik_resume.pdf
-
-.vercel
+coverage/
+dist/
+node_modules/
+playwright-report/
+test-results/
