@@ -1,5 +1,14 @@
 import { FormEvent, useMemo, useState } from "react";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
+import {
+  buildExecutiveBrief,
+  calculateApprovalReadiness,
+  calculateGovernanceReadiness,
+  calculateQualityReadiness,
+  calculateSourceReadiness,
+  countOpenApprovals,
+  getNextGate
+} from "./readiness";
 import { riskSortWeight } from "./scoring";
 import type { AiOpportunity, CxArea, IntakeDraft, RiskTier, SensitivityLevel, WorkflowStage } from "./types";
 
@@ -35,8 +44,12 @@ function App() {
   const [stageFilter, setStageFilter] = useState<WorkflowStage | "All">("All");
   const [riskFilter, setRiskFilter] = useState<RiskTier | "All">("All");
   const [draft, setDraft] = useState<IntakeDraft>(defaultDraft);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
   const selected = opportunities.find((item) => item.id === selectedId) ?? opportunities[0];
+  const selectedReadiness = calculateGovernanceReadiness(selected);
+  const selectedBrief = buildExecutiveBrief(selected);
+  const selectedGate = getNextGate(selected);
 
   const visibleOpportunities = useMemo(() => {
     return opportunities
@@ -57,16 +70,25 @@ function App() {
     const highRisk = opportunities.filter((item) => item.scores.tier === "High").length;
     const released = opportunities.filter((item) => item.stage === "Released");
     const buildQueue = opportunities.filter((item) => item.stage === "Build / QA").length;
+    const openApprovals = opportunities.reduce((total, item) => total + countOpenApprovals(item), 0);
+    const governanceReady = opportunities.filter(
+      (item) => calculateGovernanceReadiness(item) >= 70 && countOpenApprovals(item) === 0
+    ).length;
     const weeklyHours = opportunities.reduce((total, item) => total + item.impact.hoursSavedPerWeek, 0);
     const averagePriority =
       opportunities.reduce((total, item) => total + item.scores.priority, 0) / opportunities.length;
+    const averageReadiness =
+      opportunities.reduce((total, item) => total + calculateGovernanceReadiness(item), 0) / opportunities.length;
 
     return {
       highRisk,
       released: released.length,
       buildQueue,
+      openApprovals,
+      governanceReady,
       weeklyHours,
-      averagePriority: Math.round(averagePriority)
+      averagePriority: Math.round(averagePriority),
+      averageReadiness: Math.round(averageReadiness)
     };
   }, [opportunities]);
 
@@ -79,8 +101,14 @@ function App() {
     const opportunity = createOpportunityFromDraft(draft, opportunities.length + 1);
     setOpportunities((current) => [opportunity, ...current]);
     setSelectedId(opportunity.id);
+    setCopyState("idle");
     setStageFilter("All");
     setRiskFilter("All");
+  }
+
+  function selectOpportunity(id: string) {
+    setSelectedId(id);
+    setCopyState("idle");
   }
 
   function moveSelected(stage: WorkflowStage) {
@@ -92,7 +120,7 @@ function App() {
               stage,
               auditLog: [
                 {
-                  timestamp: "2026-06-06 10:45",
+                  timestamp: "2026-06-07 09:30",
                   actor: "CX AI Architect",
                   event: `Stage moved to ${stage}`
                 },
@@ -104,12 +132,24 @@ function App() {
     );
   }
 
+  async function copySelectedBrief() {
+    try {
+      await navigator.clipboard.writeText(selectedBrief);
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="workspace-header">
         <div>
           <p className="eyebrow">Vena Solutions role prototype</p>
           <h1>CX AI Operating Cadence Board</h1>
+          <p className="header-subtitle">
+            Business-facing AI transformation across services, adoption, managed services, and enablement.
+          </p>
         </div>
         <div className="header-actions" aria-label="Operating cadence">
           <span>Intake</span>
@@ -121,10 +161,29 @@ function App() {
 
       <section className="metric-strip" aria-label="Cadence summary">
         <Metric label="Avg priority" value={metrics.averagePriority} suffix="/100" tone="green" />
+        <Metric label="Gov ready" value={metrics.governanceReady} suffix="items" tone="blue" />
+        <Metric label="Avg readiness" value={metrics.averageReadiness} suffix="/100" tone="gray" />
         <Metric label="Build / QA" value={metrics.buildQueue} suffix="items" tone="blue" />
-        <Metric label="High risk" value={metrics.highRisk} suffix="reviews" tone="red" />
-        <Metric label="Released" value={metrics.released} suffix="pilots" tone="gray" />
+        <Metric label="Open approvals" value={metrics.openApprovals} suffix="gates" tone="red" />
         <Metric label="Impact" value={metrics.weeklyHours} suffix="hrs/wk" tone="amber" />
+      </section>
+
+      <section className="leadership-strip" aria-label="Portfolio operating summary">
+        <article>
+          <span>Portfolio signal</span>
+          <strong>{metrics.governanceReady} governed workflows ready for release motion</strong>
+          <p>Backlog quality is judged by releaseability, not idea volume.</p>
+        </article>
+        <article>
+          <span>Control posture</span>
+          <strong>{metrics.openApprovals} human gates still open</strong>
+          <p>Sensitive actions remain draft-and-review until owner approval clears.</p>
+        </article>
+        <article>
+          <span>Current executive bet</span>
+          <strong>{selected.title}</strong>
+          <p>{selectedGate}</p>
+        </article>
       </section>
 
       <div className="workspace-grid">
@@ -277,14 +336,19 @@ function App() {
                         type="button"
                         className={`opportunity-card ${item.id === selected.id ? "selected" : ""}`}
                         key={item.id}
-                        onClick={() => setSelectedId(item.id)}
+                        onClick={() => selectOpportunity(item.id)}
                       >
                         <span className="card-topline">
                           <span>{item.cxArea}</span>
                           <RiskBadge tier={item.scores.tier} />
                         </span>
                         <strong>{item.title}</strong>
+                        <span className="card-meta">
+                          <span>{item.owner}</span>
+                          <span>{item.sensitivity}</span>
+                        </span>
                         <span className="card-copy">{item.painPoint}</span>
+                        <span className="gate-line">{getNextGate(item)}</span>
                         <span className="score-row">
                           <ScoreBar label="Priority" value={item.scores.priority} />
                         </span>
@@ -303,6 +367,9 @@ function App() {
           <div>
             <p className="eyebrow">{selected.cxArea}</p>
             <h2 id="detail-title">{selected.title}</h2>
+            <p className="detail-subtitle">
+              Governance readiness {selectedReadiness}/100. {selectedGate}.
+            </p>
           </div>
           <div className="stage-actions" aria-label="Move selected workflow">
             {STAGES.map((stage) => (
@@ -319,6 +386,34 @@ function App() {
         </div>
 
         <div className="detail-grid">
+          <div className="detail-section brief-section">
+            <div className="section-title-row">
+              <h3>Executive handoff brief</h3>
+              <button className="secondary-button" type="button" onClick={copySelectedBrief}>
+                {copyState === "copied" ? "Copied" : copyState === "failed" ? "Copy failed" : "Copy brief"}
+              </button>
+            </div>
+            <pre>{selectedBrief}</pre>
+          </div>
+
+          <div className="detail-section readiness-section">
+            <h3>Readiness gates</h3>
+            <div className="readiness-list">
+              <span>
+                Approval readiness <strong>{calculateApprovalReadiness(selected)}/100</strong>
+              </span>
+              <span>
+                QA readiness <strong>{calculateQualityReadiness(selected)}/100</strong>
+              </span>
+              <span>
+                Source readiness <strong>{calculateSourceReadiness(selected)}/100</strong>
+              </span>
+              <span>
+                Open approvals <strong>{countOpenApprovals(selected)}</strong>
+              </span>
+            </div>
+          </div>
+
           <div className="detail-section score-section">
             <h3>Scorecard</h3>
             <ScoreBar label="Value" value={selected.scores.value} />
