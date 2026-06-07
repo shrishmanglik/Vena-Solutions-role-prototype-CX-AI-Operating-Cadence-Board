@@ -19,11 +19,11 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.0.0",
     "typescript": "5.9.3",
-    "vite": "7.2.7",
-    "vitest": "4.0.15"
+    "vite": "^7.3.5",
+    "vitest": "^4.1.8"
   },
   "overrides": {
-    "std-env": "3.10.0",
-    "tinyexec": "1.0.2"
+    "std-env": "4.1.0",
+    "tinyexec": "1.2.4"
   }
 }
