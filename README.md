@@ -3,7 +3,7 @@
 Role-specific prototype for the **Vena Solutions Customer Experience AI Architect** application.
 
 Live website: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)  
-GitHub repository: [https://github.com/shrishmanglik/vena](https://github.com/shrishmanglik/vena)
+GitHub repository: [https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board](https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board)
 
 ## Executive Summary
 
@@ -115,7 +115,7 @@ Required steps:
 2. Run `npm run test`, `npm run typecheck`, and `npm run build`.
 3. Confirm no private application documents are staged.
 4. Commit with a conventional message.
-5. Push to `main` on [shrishmanglik/vena](https://github.com/shrishmanglik/vena).
+5. Push to `main` on [the GitHub repository](https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board).
 6. Redeploy to Vercel when the website behavior or UI changes.
 7. Smoke-test [https://vena-olive.vercel.app](https://vena-olive.vercel.app) after deployment.
 
