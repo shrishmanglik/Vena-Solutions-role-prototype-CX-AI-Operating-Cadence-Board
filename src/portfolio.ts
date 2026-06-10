@@ -327,7 +327,8 @@ export function formatCompactCurrency(value: number): string {
 export function buildPortfolioBusinessCase(
   opportunities: AiOpportunity[],
   economics: PortfolioEconomics,
-  contributors: PortfolioContributor[]
+  contributors: PortfolioContributor[],
+  scenarioName = "Base"
 ): string {
   const topContributor = contributors[0];
   const decision =
@@ -337,6 +338,7 @@ export function buildPortfolioBusinessCase(
 
   return [
     "Vena CX AI operating-system business case",
+    `Scenario: ${scenarioName}`,
     `Decision: ${decision}`,
     `Modeled annual value: ${formatCurrency(economics.annualizedValue)} against ${formatCurrency(economics.pilotInvestment)} pilot investment.`,
     `ROI multiple: ${economics.roiMultiple}x | Payback: ${economics.paybackMonths} months | Confidence: ${economics.confidenceScore}/100.`,

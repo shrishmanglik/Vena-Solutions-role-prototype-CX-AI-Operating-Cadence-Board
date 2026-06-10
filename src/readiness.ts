@@ -84,13 +84,24 @@ export function getNextGate(opportunity: AiOpportunity): string {
   return "Measure edits, adoption, and cycle-time movement";
 }
 
-export function buildExecutiveBrief(opportunity: AiOpportunity): string {
+export interface BriefDecisionLine {
+  decision: string;
+  owner: string;
+  date: string;
+  reason: string;
+  nextReviewWindow: string;
+}
+
+export function buildExecutiveBrief(opportunity: AiOpportunity, latestDecision: BriefDecisionLine | null = null): string {
   const readiness = calculateGovernanceReadiness(opportunity);
   const openApprovals = countOpenApprovals(opportunity);
   const topSources = opportunity.knowledgeSources
     .slice(0, 2)
     .map((source) => source.name)
     .join(", ");
+  const decisionLine = latestDecision
+    ? `Latest decision: ${latestDecision.decision} (${latestDecision.date}, ${latestDecision.owner}). ${latestDecision.reason} Next review: ${latestDecision.nextReviewWindow}.`
+    : "Latest decision: none recorded. Bring a Fund / Hold / Scale / Pause / Retire call to the next review.";
 
   return [
     `${opportunity.title}`,
@@ -98,6 +109,7 @@ export function buildExecutiveBrief(opportunity: AiOpportunity): string {
     `CX area: ${opportunity.cxArea}`,
     `Priority: ${opportunity.scores.priority}/100 | Risk: ${opportunity.scores.tier} | Governance readiness: ${readiness}/100`,
     `Current gate: ${getNextGate(opportunity)}`,
+    decisionLine,
     `Open approvals: ${openApprovals}`,
     `Trusted inputs: ${topSources || "Source map pending"}`,
     `Vena posture: Microsoft-native, FP&A-aware, source-linked, and draft-first.`,

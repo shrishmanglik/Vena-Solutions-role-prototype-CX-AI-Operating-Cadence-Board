@@ -1,11 +1,28 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { buildActionQueueView, listActionOwners, toggleActionId } from "./actionQueue";
+import type { SeverityFilter } from "./actionQueue";
+import { buildBoardPacket, CONTROL_BOUNDARY } from "./boardPacket";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
+import {
+  createDecisionRecord,
+  DECISION_TYPES,
+  decisionsForWorkflow,
+  latestDecisionForWorkflow,
+  REVIEW_WINDOWS,
+  summarizeDecisionPosture
+} from "./decisions";
+import type { DecisionRecord, DecisionType, ReviewWindow } from "./decisions";
+import {
+  clearPersistedState,
+  getDefaultAssumptions,
+  loadPersistedState,
+  savePersistedState
+} from "./persistence";
 import {
   buildPortfolioBusinessCase,
   buildOperatingActions,
   buildWeeklyOperatingAgenda,
   calculatePortfolioEconomics,
-  defaultPortfolioAssumptions,
   formatCompactCurrency,
   formatCurrency,
   investmentGates,
@@ -21,6 +38,8 @@ import {
   getNextGate
 } from "./readiness";
 import { riskSortWeight } from "./scoring";
+import { getScenarioPreset, matchScenario, scenarioPresets } from "./scenarios";
+import type { ScenarioId, ScenarioSelection } from "./scenarios";
 import {
   alignmentSignals,
   architectureLanes,
@@ -39,6 +58,7 @@ const cxAreas: CxArea[] = [
 
 const sensitivities: SensitivityLevel[] = ["Low", "Moderate", "Sensitive", "Restricted"];
 const riskFilters: Array<RiskTier | "All"> = ["All", "High", "Medium", "Low"];
+const severityFilters: SeverityFilter[] = ["All", "Critical", "High", "Medium", "Watch"];
 
 type ActiveView = "Executive" | "Portfolio" | "Pilot" | "Workflow";
 
@@ -48,6 +68,10 @@ const workspaceViews: Array<{ id: ActiveView; label: string; summary: string }> 
   { id: "Pilot", label: "Pilot", summary: "Plan and controls" },
   { id: "Workflow", label: "Workflow", summary: "Selected detail" }
 ];
+
+function isActiveView(value: string | null): value is ActiveView {
+  return value === "Executive" || value === "Portfolio" || value === "Pilot" || value === "Workflow";
+}
 
 const defaultDraft: IntakeDraft = {
   title: "Customer onboarding status brief",
@@ -65,21 +89,65 @@ const defaultDraft: IntakeDraft = {
   sensitiveActionApproval: true
 };
 
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function todayStamp(): string {
+  const now = new Date();
+
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function nowStamp(): string {
+  const now = new Date();
+
+  return `${todayStamp()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+type CopyState = "idle" | "copied" | "failed";
+
+const initialState = loadPersistedState();
+
 function App() {
-  const [opportunities, setOpportunities] = useState<AiOpportunity[]>(seedOpportunities);
-  const [selectedId, setSelectedId] = useState(seedOpportunities[0].id);
+  const [opportunities, setOpportunities] = useState<AiOpportunity[]>(initialState.opportunities ?? seedOpportunities);
+  const [selectedId, setSelectedId] = useState(initialState.selectedId ?? seedOpportunities[0].id);
   const [stageFilter, setStageFilter] = useState<WorkflowStage | "All">("All");
   const [riskFilter, setRiskFilter] = useState<RiskTier | "All">("All");
   const [draft, setDraft] = useState<IntakeDraft>(defaultDraft);
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const [businessCaseCopyState, setBusinessCaseCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const [portfolioAssumptions, setPortfolioAssumptions] = useState(defaultPortfolioAssumptions);
-  const [activeView, setActiveView] = useState<ActiveView>("Executive");
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [businessCaseCopyState, setBusinessCaseCopyState] = useState<CopyState>("idle");
+  const [packetCopyState, setPacketCopyState] = useState<CopyState>("idle");
+  const [portfolioAssumptions, setPortfolioAssumptions] = useState(initialState.assumptions ?? getDefaultAssumptions());
+  const [scenario, setScenario] = useState<ScenarioSelection>(initialState.scenario ?? "Base");
+  const [activeView, setActiveView] = useState<ActiveView>(
+    isActiveView(initialState.activeView) ? initialState.activeView : "Executive"
+  );
+  const [decisions, setDecisions] = useState<DecisionRecord[]>(initialState.decisions);
+  const [completedActionIds, setCompletedActionIds] = useState<string[]>(initialState.completedActionIds);
+  const [snoozedActionIds, setSnoozedActionIds] = useState<string[]>(initialState.snoozedActionIds);
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("All");
+  const [ownerFilter, setOwnerFilter] = useState<string>("All");
+
+  useEffect(() => {
+    savePersistedState({
+      opportunities,
+      selectedId,
+      activeView,
+      assumptions: portfolioAssumptions,
+      scenario,
+      decisions,
+      completedActionIds,
+      snoozedActionIds
+    });
+  }, [opportunities, selectedId, activeView, portfolioAssumptions, scenario, decisions, completedActionIds, snoozedActionIds]);
 
   const selected = opportunities.find((item) => item.id === selectedId) ?? opportunities[0];
-  const selectedReadiness = calculateGovernanceReadiness(selected);
-  const selectedBrief = buildExecutiveBrief(selected);
-  const selectedGate = getNextGate(selected);
+  const selectedDecisions = selected ? decisionsForWorkflow(decisions, selected.id) : [];
+  const selectedLatestDecision = selected ? latestDecisionForWorkflow(decisions, selected.id) : null;
+  const selectedReadiness = selected ? calculateGovernanceReadiness(selected) : 0;
+  const selectedBrief = selected ? buildExecutiveBrief(selected, selectedLatestDecision) : "";
+  const selectedGate = selected ? getNextGate(selected) : "Intake a workflow to begin";
   const portfolioEconomics = useMemo(
     () => calculatePortfolioEconomics(opportunities, portfolioAssumptions),
     [opportunities, portfolioAssumptions]
@@ -89,16 +157,44 @@ function App() {
     [opportunities, portfolioAssumptions]
   );
   const portfolioBusinessCase = useMemo(
-    () => buildPortfolioBusinessCase(opportunities, portfolioEconomics, portfolioContributors),
-    [opportunities, portfolioContributors, portfolioEconomics]
+    () => buildPortfolioBusinessCase(opportunities, portfolioEconomics, portfolioContributors, scenario),
+    [opportunities, portfolioContributors, portfolioEconomics, scenario]
   );
   const operatingActions = useMemo(
     () => buildOperatingActions(opportunities, portfolioAssumptions),
     [opportunities, portfolioAssumptions]
   );
+  const queueState = useMemo(
+    () => ({ completedIds: completedActionIds, snoozedIds: snoozedActionIds }),
+    [completedActionIds, snoozedActionIds]
+  );
+  const fullQueue = useMemo(() => buildActionQueueView(operatingActions, queueState), [operatingActions, queueState]);
+  const filteredQueue = useMemo(
+    () => buildActionQueueView(operatingActions, queueState, { severity: severityFilter, owner: ownerFilter }),
+    [operatingActions, queueState, severityFilter, ownerFilter]
+  );
+  const actionOwners = useMemo(() => listActionOwners(operatingActions), [operatingActions]);
   const weeklyAgenda = useMemo(
-    () => buildWeeklyOperatingAgenda(opportunities, portfolioEconomics, operatingActions),
-    [opportunities, operatingActions, portfolioEconomics]
+    () => buildWeeklyOperatingAgenda(opportunities, portfolioEconomics, fullQueue.open),
+    [opportunities, portfolioEconomics, fullQueue]
+  );
+  const decisionSummary = useMemo(
+    () => summarizeDecisionPosture(opportunities, decisions),
+    [opportunities, decisions]
+  );
+  const boardPacket = useMemo(
+    () =>
+      buildBoardPacket({
+        scenarioName: scenario,
+        opportunities,
+        economics: portfolioEconomics,
+        contributors: portfolioContributors,
+        openActions: fullQueue.open,
+        completedActions: fullQueue.completed,
+        agenda: weeklyAgenda,
+        decisions
+      }),
+    [scenario, opportunities, portfolioEconomics, portfolioContributors, fullQueue, weeklyAgenda, decisions]
   );
 
   const visibleOpportunities = useMemo(() => {
@@ -117,32 +213,15 @@ function App() {
   }, [opportunities, riskFilter, stageFilter]);
 
   const metrics = useMemo(() => {
-    const highRisk = opportunities.filter((item) => item.scores.tier === "High").length;
-    const released = opportunities.filter((item) => item.stage === "Released");
-    const buildQueue = opportunities.filter((item) => item.stage === "Build / QA").length;
     const openApprovals = opportunities.reduce((total, item) => total + countOpenApprovals(item), 0);
     const governanceReady = opportunities.filter(
       (item) => calculateGovernanceReadiness(item) >= 70 && countOpenApprovals(item) === 0
     ).length;
-    const monthlyRuns = opportunities.reduce((total, item) => total + item.workflowVolume, 0);
-    const weeklyHours = opportunities.reduce((total, item) => total + item.impact.hoursSavedPerWeek, 0);
-    const averagePriority =
-      opportunities.reduce((total, item) => total + item.scores.priority, 0) / opportunities.length;
-    const averageReadiness =
-      opportunities.reduce((total, item) => total + calculateGovernanceReadiness(item), 0) / opportunities.length;
 
-    return {
-      highRisk,
-      released: released.length,
-      buildQueue,
-      openApprovals,
-      governanceReady,
-      monthlyRuns,
-      weeklyHours,
-      averagePriority: Math.round(averagePriority),
-      averageReadiness: Math.round(averageReadiness)
-    };
+    return { openApprovals, governanceReady };
   }, [opportunities]);
+
+  const openActionableCount = fullQueue.open.filter((action) => action.severity !== "Watch").length;
 
   function updateDraft<K extends keyof IntakeDraft>(field: K, value: IntakeDraft[K]) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -152,7 +231,17 @@ function App() {
     field: K,
     value: (typeof portfolioAssumptions)[K]
   ) {
-    setPortfolioAssumptions((current) => ({ ...current, [field]: value }));
+    const next = { ...portfolioAssumptions, [field]: value };
+
+    setPortfolioAssumptions(next);
+    setScenario(matchScenario(next));
+  }
+
+  function applyScenario(id: ScenarioId) {
+    setPortfolioAssumptions({ ...getScenarioPreset(id).assumptions });
+    setScenario(id);
+    setBusinessCaseCopyState("idle");
+    setPacketCopyState("idle");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -174,6 +263,10 @@ function App() {
   }
 
   function moveSelected(stage: WorkflowStage) {
+    if (!selected) {
+      return;
+    }
+
     setOpportunities((current) =>
       current.map((item) =>
         item.id === selected.id
@@ -182,7 +275,7 @@ function App() {
               stage,
               auditLog: [
                 {
-                  timestamp: "2026-06-07 09:30",
+                  timestamp: nowStamp(),
                   actor: "CX AI Architect",
                   event: `Stage moved to ${stage}`
                 },
@@ -194,21 +287,86 @@ function App() {
     );
   }
 
-  async function copySelectedBrief() {
-    try {
-      await navigator.clipboard.writeText(selectedBrief);
-      setCopyState("copied");
-    } catch {
-      setCopyState("failed");
+  function recordDecision(input: {
+    decision: DecisionType;
+    owner: string;
+    reason: string;
+    evidenceRequired: string;
+    nextReviewWindow: ReviewWindow;
+  }): string | null {
+    if (!selected) {
+      return "Select a workflow before recording a decision.";
     }
+
+    const record = createDecisionRecordSafe(selected.id, input, decisions.length + 1);
+
+    if (!record) {
+      return "Owner and reason are required to record a decision.";
+    }
+
+    setDecisions((current) => [record, ...current]);
+    setOpportunities((current) =>
+      current.map((item) =>
+        item.id === selected.id
+          ? {
+              ...item,
+              auditLog: [
+                {
+                  timestamp: nowStamp(),
+                  actor: record.owner,
+                  event: `Decision recorded: ${record.decision} — ${record.reason}`
+                },
+                ...item.auditLog
+              ]
+            }
+          : item
+      )
+    );
+
+    return null;
   }
 
-  async function copyPortfolioBusinessCase() {
+  function markActionDone(actionId: string) {
+    setCompletedActionIds((current) => toggleActionId(current, actionId));
+    setSnoozedActionIds((current) => current.filter((id) => id !== actionId));
+  }
+
+  function snoozeAction(actionId: string) {
+    setSnoozedActionIds((current) => toggleActionId(current, actionId));
+  }
+
+  function resetDemoData() {
+    const confirmed = window.confirm("Reset demo data? This clears added workflows, decisions, and action states.");
+
+    if (!confirmed) {
+      return;
+    }
+
+    clearPersistedState();
+    setOpportunities(seedOpportunities);
+    setSelectedId(seedOpportunities[0].id);
+    setActiveView("Executive");
+    setPortfolioAssumptions(getDefaultAssumptions());
+    setScenario("Base");
+    setDecisions([]);
+    setCompletedActionIds([]);
+    setSnoozedActionIds([]);
+    setStageFilter("All");
+    setRiskFilter("All");
+    setSeverityFilter("All");
+    setOwnerFilter("All");
+    setDraft(defaultDraft);
+    setCopyState("idle");
+    setBusinessCaseCopyState("idle");
+    setPacketCopyState("idle");
+  }
+
+  async function copyToClipboard(text: string, setState: (state: CopyState) => void) {
     try {
-      await navigator.clipboard.writeText(portfolioBusinessCase);
-      setBusinessCaseCopyState("copied");
+      await navigator.clipboard.writeText(text);
+      setState("copied");
     } catch {
-      setBusinessCaseCopyState("failed");
+      setState("failed");
     }
   }
 
@@ -222,11 +380,16 @@ function App() {
             A fundable portfolio system for governed AI workflows, CX adoption, executive controls, and measurable value.
           </p>
         </div>
-        <div className="header-actions" aria-label="Operating cadence">
-          <span>Intake</span>
-          <span>Score</span>
-          <span>Build</span>
-          <span>Measure</span>
+        <div className="header-side">
+          <div className="header-actions" aria-label="Operating cadence">
+            <span>Intake</span>
+            <span>Score</span>
+            <span>Build</span>
+            <span>Measure</span>
+          </div>
+          <button className="ghost-button" type="button" onClick={resetDemoData}>
+            Reset demo data
+          </button>
         </div>
       </header>
 
@@ -234,7 +397,7 @@ function App() {
         <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />
         <Metric label="ROI" value={portfolioEconomics.roiMultiple.toFixed(1)} suffix="x" tone="amber" />
         <Metric label="Pilot ready" value={metrics.governanceReady} suffix="items" tone="blue" />
-        <Metric label="Action queue" value={operatingActions.filter((action) => action.severity !== "Watch").length} suffix="items" tone="red" />
+        <Metric label="Action queue" value={openActionableCount} suffix="open" tone="red" />
       </section>
 
       <nav className="view-tabs" aria-label="Workspace views">
@@ -263,13 +426,26 @@ function App() {
               control maturity, payback, and scale decisions.
             </p>
           </div>
-          <button className="secondary-button" type="button" onClick={copyPortfolioBusinessCase}>
-            {businessCaseCopyState === "copied"
-              ? "Copied"
-              : businessCaseCopyState === "failed"
-                ? "Copy failed"
-                : "Copy business case"}
-          </button>
+          <div className="heading-buttons">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => copyToClipboard(boardPacket, setPacketCopyState)}
+            >
+              {packetCopyState === "copied" ? "Packet copied" : packetCopyState === "failed" ? "Copy failed" : "Copy weekly board packet"}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => copyToClipboard(portfolioBusinessCase, setBusinessCaseCopyState)}
+            >
+              {businessCaseCopyState === "copied"
+                ? "Copied"
+                : businessCaseCopyState === "failed"
+                  ? "Copy failed"
+                  : "Copy business case"}
+            </button>
+          </div>
         </div>
 
         <div className="business-case-grid">
@@ -283,7 +459,28 @@ function App() {
           </div>
 
           <div className="assumption-panel">
-            <h3>Scale assumptions</h3>
+            <div className="section-title-row">
+              <h3>Scenario planner</h3>
+              <span className="scenario-state">{scenario}</span>
+            </div>
+            <div className="scenario-row" role="group" aria-label="Scenario presets">
+              {scenarioPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={scenario === preset.id ? "active" : ""}
+                  onClick={() => applyScenario(preset.id)}
+                  title={preset.description}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <p className="scenario-note">
+              {scenario === "Custom"
+                ? "Custom assumptions in play. Pick a preset to return to a named scenario."
+                : getScenarioPreset(scenario as ScenarioId).description}
+            </p>
             <Slider
               label="Loaded CX cost"
               value={portfolioAssumptions.loadedHourlyCost}
@@ -322,6 +519,9 @@ function App() {
               <span>
                 Pilot investment <strong>{formatCurrency(portfolioEconomics.pilotInvestment)}</strong>
               </span>
+              <span>
+                Delay cost <strong>{formatCurrency(portfolioAssumptions.cxDelayCostPerDay)}/day</strong>
+              </span>
             </div>
           </div>
 
@@ -335,13 +535,179 @@ function App() {
 
           <div className="scale-candidate-panel">
             <h3>Scale candidates</h3>
+            {portfolioContributors.length === 0 ? (
+              <EmptyState
+                title="No workflows scored yet"
+                hint="Add workflows through Portfolio intake to build the scale shortlist."
+              />
+            ) : (
+              <>
+                {portfolioEconomics.governanceReadyCount === 0 && (
+                  <p className="panel-note">No workflow is release-ready yet. Clear approvals and QA gates first.</p>
+                )}
+                <ol>
+                  {portfolioContributors.slice(0, 3).map((candidate) => (
+                    <li key={candidate.id}>
+                      <span>{formatCurrency(candidate.contribution)}</span>
+                      <strong>{candidate.title}</strong>
+                      <p>{candidate.nextGate}</p>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+          </div>
+
+          <div className="action-queue-panel">
+            <div className="section-title-row">
+              <h3>Weekly action queue</h3>
+              <span>
+                {fullQueue.urgentCount} urgent | {formatCurrency(fullQueue.blockedValueAtStake)} blocked
+              </span>
+            </div>
+
+            <div className="queue-controls">
+              <label>
+                Severity
+                <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value as SeverityFilter)}>
+                  {severityFilters.map((filter) => (
+                    <option key={filter}>{filter}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Owner
+                <select value={ownerFilter} onChange={(event) => setOwnerFilter(event.target.value)}>
+                  <option>All</option>
+                  {actionOwners.map((owner) => (
+                    <option key={owner}>{owner}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {filteredQueue.open.length === 0 ? (
+              <EmptyState
+                title="No blocked actions in this view"
+                hint={
+                  fullQueue.open.length === 0
+                    ? "Every queue item is done or snoozed. Review released workflows for scale evidence."
+                    : "No open actions match the current filters. Reset severity or owner to see the full queue."
+                }
+              />
+            ) : (
+              <ol>
+                {filteredQueue.open.slice(0, 5).map((action) => (
+                  <li key={action.id}>
+                    <span className={`severity-pill ${action.severity.toLowerCase()}`}>{action.severity}</span>
+                    <div className="action-body">
+                      <strong>{action.action}</strong>
+                      <p>{action.workflowTitle}</p>
+                      <em>
+                        {action.owner} | {action.due} | {formatCurrency(action.valueAtStake)} at stake
+                      </em>
+                    </div>
+                    <div className="action-buttons">
+                      <button className="mini-button" type="button" onClick={() => markActionDone(action.id)}>
+                        Done
+                      </button>
+                      <button className="mini-button" type="button" onClick={() => snoozeAction(action.id)}>
+                        Snooze
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            {filteredQueue.open.length > 5 && (
+              <p className="panel-note">+{filteredQueue.open.length - 5} more open actions in the queue.</p>
+            )}
+
+            {fullQueue.snoozed.length > 0 && (
+              <div className="queue-subsection">
+                <h4>Snoozed until next review</h4>
+                <ul className="compact-action-list">
+                  {fullQueue.snoozed.map((action) => (
+                    <li key={action.id}>
+                      <span>
+                        {action.action} ({action.workflowTitle})
+                      </span>
+                      <button className="mini-button" type="button" onClick={() => snoozeAction(action.id)}>
+                        Restore
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="queue-subsection">
+              <h4>Completed this week</h4>
+              {fullQueue.completed.length === 0 ? (
+                <p className="panel-note">Nothing completed yet. Mark actions done as owners clear them.</p>
+              ) : (
+                <ul className="compact-action-list completed">
+                  {fullQueue.completed.map((action) => (
+                    <li key={action.id}>
+                      <span>
+                        {action.action} ({action.workflowTitle})
+                      </span>
+                      <button className="mini-button" type="button" onClick={() => markActionDone(action.id)}>
+                        Reopen
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="decision-summary-panel">
+            <div className="section-title-row">
+              <h3>Portfolio decisions</h3>
+              <span>
+                {decisionSummary.decidedWorkflows} decided | {decisionSummary.undecidedWorkflows} pending
+              </span>
+            </div>
+            {decisionSummary.latestDecisions.length === 0 ? (
+              <EmptyState
+                title="No decisions yet"
+                hint="Record Fund / Hold / Scale / Pause / Retire calls in the Workflow tab. They land here and in the board packet."
+              />
+            ) : (
+              <>
+                <div className="decision-chips">
+                  {DECISION_TYPES.map((type) =>
+                    decisionSummary.counts[type] > 0 ? (
+                      <span key={type} className={`decision-pill ${type.toLowerCase()}`}>
+                        {type} {decisionSummary.counts[type]}
+                      </span>
+                    ) : null
+                  )}
+                </div>
+                <ul className="decision-roll">
+                  {decisionSummary.latestDecisions.slice(0, 4).map((entry) => (
+                    <li key={entry.record.id}>
+                      <span className={`decision-pill ${entry.record.decision.toLowerCase()}`}>{entry.record.decision}</span>
+                      <div>
+                        <strong>{entry.workflowTitle}</strong>
+                        <p>
+                          {entry.record.date} | {entry.record.owner} | next review {entry.record.nextReviewWindow}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          <div className="weekly-agenda-panel">
+            <h3>Weekly operating review</h3>
             <ol>
-              {portfolioContributors.slice(0, 3).map((candidate) => (
-                <li key={candidate.id}>
-                  <span>{formatCurrency(candidate.contribution)}</span>
-                  <strong>{candidate.title}</strong>
-                  <p>{candidate.nextGate}</p>
-                </li>
+              {weeklyAgenda.map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ol>
           </div>
@@ -356,43 +722,17 @@ function App() {
               </article>
             ))}
           </div>
-
-          <div className="action-queue-panel">
-            <div className="section-title-row">
-              <h3>Weekly action queue</h3>
-              <span>{operatingActions.filter((action) => action.severity === "Critical").length} critical</span>
-            </div>
-            <ol>
-              {operatingActions.slice(0, 5).map((action) => (
-                <li key={action.id}>
-                  <span className={`severity-pill ${action.severity.toLowerCase()}`}>{action.severity}</span>
-                  <div>
-                    <strong>{action.action}</strong>
-                    <p>{action.workflowTitle}</p>
-                    <em>
-                      {action.owner} | {action.due} | {formatCurrency(action.valueAtStake)}
-                    </em>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="weekly-agenda-panel">
-            <h3>Weekly operating review</h3>
-            <ol>
-              {weeklyAgenda.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ol>
-          </div>
         </div>
       </section>
 
       <section className="leadership-strip" aria-label="Portfolio operating summary">
         <article>
           <span>Portfolio signal</span>
-          <strong>{metrics.governanceReady} governed workflows ready for release motion</strong>
+          <strong>
+            {metrics.governanceReady > 0
+              ? `${metrics.governanceReady} governed workflows ready for release motion`
+              : "No release-ready workflows yet — clear gates before scaling"}
+          </strong>
           <p>Backlog quality is judged by releaseability, not idea volume.</p>
         </article>
         <article>
@@ -402,7 +742,7 @@ function App() {
         </article>
         <article>
           <span>Current executive bet</span>
-          <strong>{selected.title}</strong>
+          <strong>{selected ? selected.title : "Portfolio intake pending"}</strong>
           <p>{selectedGate}</p>
         </article>
       </section>
@@ -557,6 +897,12 @@ function App() {
             </div>
           </div>
 
+          {opportunities.length === 0 ? (
+            <EmptyState
+              title="No workflows in the portfolio"
+              hint="Use the intake form to add the first CX AI workflow candidate."
+            />
+          ) : (
           <div className="board-grid">
             {STAGES.map((stage) => {
               const stageItems = visibleOpportunities.filter((item) => item.stage === stage);
@@ -568,10 +914,11 @@ function App() {
                     <span>{stageItems.length}</span>
                   </div>
                   <div className="stage-stack">
+                    {stageItems.length === 0 && <p className="stage-empty">Nothing in {stage} for this filter.</p>}
                     {stageItems.map((item) => (
                       <button
                         type="button"
-                        className={`opportunity-card ${item.id === selected.id ? "selected" : ""}`}
+                        className={`opportunity-card ${selected && item.id === selected.id ? "selected" : ""}`}
                         key={item.id}
                         onClick={() => selectOpportunity(item.id)}
                       >
@@ -583,6 +930,11 @@ function App() {
                         <span className="card-meta">
                           <span>{item.owner}</span>
                           <span>{item.sensitivity}</span>
+                          {latestDecisionForWorkflow(decisions, item.id) && (
+                            <span className={`decision-pill ${latestDecisionForWorkflow(decisions, item.id)?.decision.toLowerCase()}`}>
+                              {latestDecisionForWorkflow(decisions, item.id)?.decision}
+                            </span>
+                          )}
                         </span>
                         <span className="card-copy">{item.painPoint}</span>
                         <span className="gate-line">{getNextGate(item)}</span>
@@ -596,6 +948,7 @@ function App() {
               );
             })}
           </div>
+          )}
         </section>
       </div>
       )}
@@ -675,7 +1028,16 @@ function App() {
       </section>
       )}
 
-      {activeView === "Workflow" && (
+      {activeView === "Workflow" && !selected && (
+        <section className="detail-panel">
+          <EmptyState
+            title="No workflow selected"
+            hint="Add a workflow through Portfolio intake, then open it here for governance detail."
+          />
+        </section>
+      )}
+
+      {activeView === "Workflow" && selected && (
       <section className="detail-panel" aria-labelledby="detail-title">
         <div className="detail-title-row">
           <div>
@@ -684,6 +1046,11 @@ function App() {
             <p className="detail-subtitle">
               Governance readiness {selectedReadiness}/100. {selectedGate}.
             </p>
+            {selectedLatestDecision && (
+              <span className={`decision-pill ${selectedLatestDecision.decision.toLowerCase()}`}>
+                {selectedLatestDecision.decision} · {selectedLatestDecision.date}
+              </span>
+            )}
           </div>
           <div className="stage-actions" aria-label="Move selected workflow">
             {STAGES.map((stage) => (
@@ -703,7 +1070,11 @@ function App() {
           <div className="detail-section brief-section">
             <div className="section-title-row">
               <h3>Executive handoff brief</h3>
-              <button className="secondary-button" type="button" onClick={copySelectedBrief}>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => copyToClipboard(selectedBrief, setCopyState)}
+              >
                 {copyState === "copied" ? "Copied" : copyState === "failed" ? "Copy failed" : "Copy brief"}
               </button>
             </div>
@@ -759,6 +1130,13 @@ function App() {
             </div>
           </div>
 
+          <DecisionPanel
+            key={selected.id}
+            workflowOwner={selected.owner}
+            history={selectedDecisions}
+            onRecord={recordDecision}
+          />
+
           <div className="detail-section audit-section">
             <h3>Audit log</h3>
             <ol>
@@ -774,7 +1152,164 @@ function App() {
         </div>
       </section>
       )}
+
+      <footer className="app-footer">
+        <p>{CONTROL_BOUNDARY}</p>
+        <p>Demo state persists in this browser only. Use “Reset demo data” to return to the seeded portfolio.</p>
+      </footer>
     </main>
+  );
+}
+
+function createDecisionRecordSafe(
+  workflowId: string,
+  input: {
+    decision: DecisionType;
+    owner: string;
+    reason: string;
+    evidenceRequired: string;
+    nextReviewWindow: ReviewWindow;
+  },
+  sequence: number
+): DecisionRecord | null {
+  return createDecisionRecord(
+    {
+      workflowId,
+      decision: input.decision,
+      owner: input.owner,
+      date: todayStamp(),
+      reason: input.reason,
+      evidenceRequired: input.evidenceRequired,
+      nextReviewWindow: input.nextReviewWindow
+    },
+    sequence
+  );
+}
+
+function DecisionPanel({
+  workflowOwner,
+  history,
+  onRecord
+}: {
+  workflowOwner: string;
+  history: DecisionRecord[];
+  onRecord: (input: {
+    decision: DecisionType;
+    owner: string;
+    reason: string;
+    evidenceRequired: string;
+    nextReviewWindow: ReviewWindow;
+  }) => string | null;
+}) {
+  const [decision, setDecision] = useState<DecisionType>("Fund");
+  const [owner, setOwner] = useState(workflowOwner);
+  const [reason, setReason] = useState("");
+  const [evidenceRequired, setEvidenceRequired] = useState("");
+  const [nextReviewWindow, setNextReviewWindow] = useState<ReviewWindow>("2 weeks");
+  const [error, setError] = useState<string | null>(null);
+  const [recorded, setRecorded] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const failure = onRecord({ decision, owner, reason, evidenceRequired, nextReviewWindow });
+
+    if (failure) {
+      setError(failure);
+      setRecorded(false);
+      return;
+    }
+
+    setError(null);
+    setRecorded(true);
+    setReason("");
+    setEvidenceRequired("");
+  }
+
+  return (
+    <div className="detail-section decision-section">
+      <h3>Decision record</h3>
+      <form className="decision-form" onSubmit={handleSubmit}>
+        <div className="decision-form-row">
+          <label>
+            Decision
+            <select value={decision} onChange={(event) => setDecision(event.target.value as DecisionType)}>
+              {DECISION_TYPES.map((type) => (
+                <option key={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Owner
+            <input value={owner} onChange={(event) => setOwner(event.target.value)} maxLength={64} />
+          </label>
+          <label>
+            Next review
+            <select
+              value={nextReviewWindow}
+              onChange={(event) => setNextReviewWindow(event.target.value as ReviewWindow)}
+            >
+              {REVIEW_WINDOWS.map((window) => (
+                <option key={window}>{window}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <label>
+          Reason
+          <input
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            maxLength={160}
+            placeholder="Why this call, in one sentence"
+          />
+        </label>
+        <label>
+          Evidence required
+          <input
+            value={evidenceRequired}
+            onChange={(event) => setEvidenceRequired(event.target.value)}
+            maxLength={160}
+            placeholder="What proof unlocks the next review"
+          />
+        </label>
+        <div className="decision-form-footer">
+          <button className="secondary-button" type="submit">
+            Record decision
+          </button>
+          {error && <span className="form-error">{error}</span>}
+          {recorded && !error && <span className="form-success">Recorded.</span>}
+        </div>
+      </form>
+
+      <h4>History</h4>
+      {history.length === 0 ? (
+        <p className="panel-note">No decisions recorded for this workflow yet.</p>
+      ) : (
+        <ul className="decision-history">
+          {history.map((record) => (
+            <li key={record.id}>
+              <span className={`decision-pill ${record.decision.toLowerCase()}`}>{record.decision}</span>
+              <div>
+                <strong>
+                  {record.date} | {record.owner} | next review {record.nextReviewWindow}
+                </strong>
+                <p>{record.reason}</p>
+                <em>Evidence: {record.evidenceRequired}</em>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="empty-state">
+      <strong>{title}</strong>
+      <p>{hint}</p>
+    </div>
   );
 }
 
@@ -830,11 +1365,15 @@ function DetailList({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="detail-section">
       <h3>{title}</h3>
-      <ul>
-        {items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+      {items.length === 0 ? (
+        <p className="panel-note">Nothing documented yet.</p>
+      ) : (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

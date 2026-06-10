@@ -2,37 +2,40 @@
 
 Role-specific prototype for the **Vena Solutions Customer Experience AI Architect** application.
 
-Live website: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)  
+Live website: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)
 GitHub repository: [https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board](https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board)
 
 ## Executive Summary
 
-This is a working prototype of a governed CX AI portfolio operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, funded, built, reviewed, released, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
+This is a working prototype of a governed CX AI portfolio operating system for Vena. It turns post-sales AI ideas into a portfolio that can be owned, scored, funded, built, reviewed, released, decided on, and measured across Professional Services, Customer Adoption, Managed Services, and Customer Enablement.
 
-The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, and prove pilot value with economics and evidence.
+The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
+
+Version 2.0 makes the product stateful and operational: the workspace persists between sessions, the action queue can actually be worked, every workflow carries a decision log, scenario presets stress-test the economics, and a one-click board packet summarizes the week for leadership.
 
 ## Client POV Review
 
-From a Vena leadership perspective, the most useful version of this product is not a large dashboard. It is a weekly operating surface that answers five practical questions:
+From a Vena leadership perspective, the most useful version of this product is not a large dashboard. It is a weekly operating surface that answers six practical questions:
 
 1. What should we fund?
 2. What is blocked?
 3. Who owns the next action?
 4. What value is at stake?
 5. What evidence proves this is safe and useful enough to scale?
+6. Which workflows should scale, pause, or retire — and who made that call?
 
-The latest refinement adds that operating layer: a prioritized action queue, owner/due windows, value-at-stake signals, and a weekly review agenda. The prototype now behaves less like a presentation artifact and more like software a CX leadership team could use to run an AI adoption program.
+The 2.0 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, and the weekly board packet is one click away.
 
-## Vena-Specific Thesis
+## Why Vena Would Care
 
 Vena publicly positions itself around Excel-native FP&A, governed AI agents, Microsoft-native collaboration, Power BI insights, Teams integration, Azure, and structured workflow controls. This prototype maps that product direction into the CX organization.
 
-The system is designed around four operating beliefs:
+The system is designed around five operating beliefs:
 
 - CX AI should live where Vena teams already work: Excel, Teams, Power BI, SharePoint, CRM, and Vena operating playbooks.
 - FP&A assistants need source lineage, financial context, and approved decision logic, not generic summarization.
 - Sensitive workflow actions should be draft-first, source-linked, audited, and human-approved.
-- AI adoption should be run like a measurable pilot portfolio, not a loose backlog of prompts.
+- AI adoption should be run like a measurable pilot portfolio with explicit decisions, not a loose backlog of prompts.
 - Executive sponsorship should be earned with a clear value model, payback view, investment gates, and a copy-ready business case.
 
 Public Vena sources used for alignment:
@@ -44,41 +47,59 @@ Public Vena sources used for alignment:
 
 ## Feature List
 
-- A CX AI intake form for new workflow candidates.
+### Operating state (new in 2.0)
+
+- Local persistence: added workflows, stage changes, decisions, action states, assumptions, scenario, selected workflow, and active tab survive a refresh.
+- Defensive state migration: corrupted or outdated saved data is discarded slice-by-slice instead of crashing the app.
+- One-click "Reset demo data" control to return to the seeded portfolio.
+
+### Decision records (new in 2.0)
+
+- Fund / Hold / Scale / Pause / Retire decisions per workflow with owner, date, reason, required evidence, and next review window.
+- Decision history per workflow, decision pill on board cards and the workflow header, and an audit-log entry per decision.
+- Portfolio-level decision summary on the Executive tab and latest decisions in the board packet and executive handoff brief.
+
+### Operational action queue (upgraded in 2.0)
+
+- Severity and owner filters.
+- Mark done, snooze, restore, and reopen — with a compact "completed this week" section so cleared work stays visible.
+- Urgent count and blocked value at stake across open critical/high actions.
+- Top 5 open actions surfaced on the Executive tab.
+
+### Scenario planner (new in 2.0)
+
+- Conservative / Base / Aggressive presets that set loaded CX cost, rollout scale, adoption coverage, pilot investment, and delay cost per day.
+- Slider edits automatically flag the scenario as Custom; economics recalculate immediately.
+- The active scenario name is stamped into the business-case memo and board packet.
+
+### Board packet (new in 2.0)
+
+- "Copy weekly board packet" produces clipboard text with the portfolio value summary, ROI/payback/confidence, top 3 scale candidates, critical blockers, weekly agenda, latest workflow decisions, and the non-negotiable control boundary.
+- Every section handles empty states explicitly.
+
+### Core portfolio system
+
+- A CX AI intake form for new workflow candidates with deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
 - A deterministic executive business-case engine with modeled annual value, ROI multiple, payback, confidence, and scale assumptions.
-- A simplified tabbed command-center UX with focused Executive, Portfolio, Pilot, and Workflow views.
-- A weekly operating action queue with severity, owner, due window, workflow, and value at stake.
-- A weekly governance agenda generated from portfolio economics and blocker state.
-- Deterministic scoring by business value, feasibility, risk, urgency, strategic fit, and data sensitivity.
-- A governed board across intake, scored, build/QA, and released stages.
+- A governed board across intake, scored, build/QA, and released stages with stage and risk filters.
 - Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
-- Source maps for RAG and tool usage.
-- Human approval points for sensitive write/send actions.
-- QA and evaluation readiness.
-- Executive handoff briefs.
-- A 90-day pilot roadmap with evidence requirements.
-- A delivery architecture for discovery, source grounding, draft-first build, and scale decisions.
-- Investment gates for fund/control/scale decisions.
-- Top scale-candidate ranking by modeled contribution and next governance gate.
-- Impact modeling for hours saved, time-to-value movement, adoption readiness, and data-quality lift.
+- Source maps for RAG and tool usage, human approval points, QA/evaluation readiness, release notes, adoption playbooks, impact modeling, and audit logs.
+- A 90-day pilot roadmap with evidence requirements, delivery architecture, and investment gates.
 
-## How To Use It
-
-Use the app as a weekly CX AI portfolio review.
+## How To Use Each Tab
 
 ### Executive Tab
 
-- Review modeled annual value, ROI, payback, confidence, and scale assumptions.
-- Adjust loaded CX cost, rollout scale, and adoption coverage.
-- Copy the board-ready business case memo.
-- Review the weekly action queue to see blockers, owners, due windows, and value at stake.
-- Use the weekly operating agenda to run the meeting.
+- Review modeled annual value, ROI, payback, confidence, and capacity.
+- Switch between Conservative, Base, and Aggressive scenarios, or fine-tune assumptions with the sliders.
+- Work the weekly action queue: filter by severity or owner, mark actions done, snooze to next review, and watch blocked value at stake.
+- Review the portfolio decision summary: what has been decided, what is pending.
+- Copy the board-ready business case memo or the full weekly board packet.
 
 ### Portfolio Tab
 
 - Add new AI workflow ideas through intake.
-- Score by value, feasibility, risk, strategic fit, urgency, and sensitivity.
-- Filter the backlog by stage or risk tier.
+- Filter the backlog by stage or risk tier; cards show the latest decision where one exists.
 - Select a card to inspect the workflow in detail.
 
 ### Pilot Tab
@@ -89,30 +110,26 @@ Use the app as a weekly CX AI portfolio review.
 
 ### Workflow Tab
 
-- Review the selected workflow's readiness gates.
-- Inspect source maps, tool/API actions, approvals, QA checks, release notes, adoption playbook, impact model, and audit log.
+- Review the selected workflow's readiness gates, source map, tool plan, approvals, QA checks, release notes, adoption playbook, impact model, and audit log.
 - Move the workflow across intake, scored, build/QA, and released stages.
-- Copy the workflow-specific executive handoff brief.
+- Record a Fund / Hold / Scale / Pause / Retire decision with owner, reason, evidence required, and next review window; review the full decision history.
+- Copy the workflow-specific executive handoff brief, which includes the latest decision.
 
-## Demo Walkthrough
+## Weekly Operating Review Workflow
 
-Start with the live site: [https://vena-olive.vercel.app](https://vena-olive.vercel.app)
-
-1. Start in the Executive tab and review the value case.
-2. Adjust scale assumptions for loaded CX cost, rollout scale, and adoption coverage.
-3. Copy the board-ready business case memo.
-4. Move to the Portfolio tab to add a candidate workflow or filter the backlog.
-5. Select a workflow card to open the focused Workflow detail view.
-6. Review the Vena platform fit, source map, tool plan, approvals, QA checklist, release notes, and adoption playbook.
-7. Copy the executive handoff brief for the selected workflow.
-8. Use the Pilot tab to walk through alignment, architecture, 30/60/90 roadmap, and leadership asks.
+1. Open the Executive tab and confirm the scenario (Conservative / Base / Aggressive) for the conversation.
+2. Read the weekly action queue: clear or assign every critical and high action; snooze only with a reason.
+3. Review blocked value at stake and open approval gates.
+4. For each workflow due for review, open the Workflow tab and record the decision with owner and evidence required.
+5. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
+6. Reset filters, confirm next review windows, and close the meeting with every action owned.
 
 ## Governance Posture
 
 This prototype is intentionally deterministic-first.
 
 - No AI API calls are made at runtime.
-- No customer data is stored.
+- No customer data is stored; all state is fictional sample data persisted only in the viewer's own browser (localStorage).
 - No external messages are sent.
 - No autonomous write/send action is performed.
 - No generated image assets are used.
@@ -122,7 +139,7 @@ The prototype is a working demo of an operating cadence, not a claim of producti
 
 ## Tech Stack
 
-- React
+- React 19
 - TypeScript
 - Vite
 - Vitest
@@ -141,9 +158,16 @@ npm run dev
 npm run test
 npm run typecheck
 npm run build
+npm audit
 ```
 
-Current verification coverage includes deterministic scoring, governance-readiness, strategy-layer, and portfolio-economics tests.
+Verification coverage includes deterministic scoring, governance readiness, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+
+An additional policy scan confirms no image assets or runtime AI calls:
+
+```bash
+rg -n "gpt-image|image_gen|\.png|\.jpg|\.jpeg|\.webp|\.gif|\.svg|<img|background-image|url\(" . --glob '!node_modules/**' --glob '!dist/**' --glob '!package-lock.json'
+```
 
 ## Deployment
 
@@ -164,11 +188,28 @@ Every meaningful update to this prototype should also update GitHub.
 Required steps:
 
 1. Update source and documentation together when behavior or positioning changes.
-2. Run `npm run test`, `npm run typecheck`, and `npm run build`.
-3. Confirm no private application documents are staged.
-4. Commit with a conventional message.
-5. Push to `main` on [the GitHub repository](https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board).
-6. Redeploy to Vercel when the website behavior or UI changes.
-7. Smoke-test [https://vena-olive.vercel.app](https://vena-olive.vercel.app) after deployment.
+2. Run `npm run test`, `npm run typecheck`, `npm run build`, and `npm audit`.
+3. Run the image/asset policy scan above.
+4. Confirm no private application documents are staged.
+5. Commit with a conventional message.
+6. Push to `main` on [the GitHub repository](https://github.com/shrishmanglik/Vena-Solutions-role-prototype-CX-AI-Operating-Cadence-Board).
+7. Redeploy to Vercel when the website behavior or UI changes.
+8. Smoke-test [https://vena-olive.vercel.app](https://vena-olive.vercel.app) after deployment.
 
-Private application files such as resumes, cover letters, job-description analysis, and PDFs should remain local-only unless explicitly approved for publication.
+Private application files such as resumes, cover letters, job-description analysis, and PDFs remain local-only and are excluded by `.gitignore`.
+
+## Known Limitations
+
+- State lives in the viewer's browser only; there is no backend, multi-user sync, or authentication. Two people see two different portfolios.
+- Operating actions are derived deterministically from workflow state; completing an action does not change the underlying approval or QA status (those are sample data).
+- Economics are a planning model with fictional inputs, not measured telemetry.
+- Snooze is a "until next review" toggle, not a timed reminder.
+- Copy buttons require browser clipboard permission and a focused document; the UI reports failure rather than silently dropping.
+
+## Future Roadmap
+
+- Evidence capture per decision: attach usage counts, edit-reason tags, and QA results to each review window.
+- Approval and QA status editing with role-based gates, so the action queue closes itself from real state changes.
+- Import/export of portfolio state as JSON for sharing between reviewers.
+- A read-only "board view" link that renders the packet as a page.
+- Optional Teams webhook (behind explicit approval) to post the weekly packet where leadership already works.
