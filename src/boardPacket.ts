@@ -1,5 +1,6 @@
 import type { DecisionRecord } from "./decisions";
 import { latestDecisionForWorkflow } from "./decisions";
+import type { EnterpriseReadinessReport } from "./enterpriseReadiness";
 import type { OperatingAction, PortfolioContributor, PortfolioEconomics } from "./portfolio";
 import { formatCurrency } from "./portfolio";
 import type { AiOpportunity } from "./types";
@@ -13,6 +14,7 @@ export interface BoardPacketInput {
   completedActions: OperatingAction[];
   agenda: string[];
   decisions: DecisionRecord[];
+  enterpriseReadiness?: EnterpriseReadinessReport;
 }
 
 export const CONTROL_BOUNDARY =
@@ -21,8 +23,13 @@ export const CONTROL_BOUNDARY =
 export function buildBoardPacket(input: BoardPacketInput): string {
   const lines: string[] = [];
 
-  lines.push("VENA CX AI PORTFOLIO — WEEKLY BOARD PACKET");
+  lines.push("VENA CX AI PORTFOLIO - WEEKLY BOARD PACKET");
   lines.push(`Scenario: ${input.scenarioName}`);
+  if (input.enterpriseReadiness) {
+    lines.push(
+      `Enterprise readiness: ${input.enterpriseReadiness.overallScore}/100 (${input.enterpriseReadiness.status}). ${input.enterpriseReadiness.executiveSignal}`
+    );
+  }
   lines.push("");
 
   lines.push("PORTFOLIO VALUE SUMMARY");
@@ -42,6 +49,19 @@ export function buildBoardPacket(input: BoardPacketInput): string {
     lines.push(
       `- ROI: ${input.economics.roiMultiple}x | Payback: ${input.economics.paybackMonths} months | Confidence: ${input.economics.confidenceScore}/100.`
     );
+  }
+
+  lines.push("");
+  lines.push("ENTERPRISE READINESS");
+
+  if (!input.enterpriseReadiness) {
+    lines.push("- Enterprise readiness not calculated for this packet.");
+  } else {
+    for (const dimension of input.enterpriseReadiness.dimensions) {
+      lines.push(
+        `- ${dimension.label}: ${dimension.score}/100 (${dimension.status}). ${dimension.signal} Next: ${dimension.nextMove}`
+      );
+    }
   }
 
   lines.push("");

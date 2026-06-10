@@ -3,6 +3,7 @@ import { buildBoardPacket, CONTROL_BOUNDARY } from "./boardPacket";
 import { seedOpportunities } from "./data";
 import { createDecisionRecord } from "./decisions";
 import type { DecisionRecord } from "./decisions";
+import { calculateEnterpriseReadiness } from "./enterpriseReadiness";
 import {
   buildOperatingActions,
   buildWeeklyOperatingAgenda,
@@ -15,6 +16,7 @@ function seededPacketInput() {
   const contributors = rankPortfolioContributors(seedOpportunities);
   const actions = buildOperatingActions(seedOpportunities);
   const agenda = buildWeeklyOperatingAgenda(seedOpportunities, economics, actions);
+  const enterpriseReadiness = calculateEnterpriseReadiness(seedOpportunities, economics, actions, []);
 
   return {
     scenarioName: "Base",
@@ -24,7 +26,8 @@ function seededPacketInput() {
     openActions: actions,
     completedActions: [],
     agenda,
-    decisions: [] as DecisionRecord[]
+    decisions: [] as DecisionRecord[],
+    enterpriseReadiness
   };
 }
 
@@ -36,6 +39,9 @@ describe("board packet", () => {
     expect(packet).toContain("Scenario: Base");
     expect(packet).toContain("Modeled annual value");
     expect(packet).toContain("ROI:");
+    expect(packet).toContain("ENTERPRISE READINESS");
+    expect(packet).toContain("Value case");
+    expect(packet).toContain("Operating discipline");
     expect(packet).toContain("CRITICAL BLOCKERS");
     expect(packet).toContain("WEEKLY OPERATING AGENDA");
     expect(packet).toContain(CONTROL_BOUNDARY);
@@ -85,6 +91,7 @@ describe("board packet", () => {
 
     expect(packet).toContain("No workflows in the portfolio yet");
     expect(packet).toContain("None yet. Intake and score workflows");
+    expect(packet).toContain("Enterprise readiness not calculated for this packet.");
     expect(packet).toContain("No critical blockers open this week.");
     expect(packet).toContain("Agenda pending portfolio intake.");
     expect(packet).toContain("No decisions recorded yet");

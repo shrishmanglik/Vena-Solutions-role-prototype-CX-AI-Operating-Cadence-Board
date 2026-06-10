@@ -348,7 +348,8 @@ textarea:focus-visible {
 .investment-gates,
 .action-queue-panel,
 .decision-summary-panel,
-.weekly-agenda-panel {
+.weekly-agenda-panel,
+.enterprise-readiness-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
@@ -366,7 +367,8 @@ textarea:focus-visible {
 .investment-gates h3,
 .action-queue-panel h3,
 .decision-summary-panel h3,
-.weekly-agenda-panel h3 {
+.weekly-agenda-panel h3,
+.enterprise-readiness-panel h3 {
   margin: 0;
   color: var(--ink);
   font-size: 15px;
@@ -489,6 +491,113 @@ textarea:focus-visible {
   color: #667085;
   font-size: 12px;
   line-height: 1.35;
+}
+
+.enterprise-readiness-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-pill.ready {
+  color: #17624e;
+  background: var(--green-soft);
+}
+
+.status-pill.watch {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.status-pill.blocked {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.enterprise-score {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  column-gap: 5px;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.enterprise-score strong {
+  color: var(--ink);
+  font-size: 36px;
+  line-height: 0.95;
+}
+
+.enterprise-score span {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.enterprise-score p {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.enterprise-dimensions {
+  display: grid;
+  gap: 9px;
+}
+
+.enterprise-dimensions article {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid #e4eaf1;
+  padding-top: 9px;
+}
+
+.enterprise-dimensions article:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.enterprise-dimensions div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.enterprise-dimensions strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.enterprise-dimensions span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.enterprise-dimensions p,
+.enterprise-dimensions em {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.34;
+}
+
+.enterprise-dimensions em {
+  color: #475467;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .action-queue-panel .section-title-row span {

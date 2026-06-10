@@ -12,6 +12,7 @@ import {
   summarizeDecisionPosture
 } from "./decisions";
 import type { DecisionRecord, DecisionType, ReviewWindow } from "./decisions";
+import { calculateEnterpriseReadiness } from "./enterpriseReadiness";
 import {
   clearPersistedState,
   getDefaultAssumptions,
@@ -169,6 +170,10 @@ function App() {
     [completedActionIds, snoozedActionIds]
   );
   const fullQueue = useMemo(() => buildActionQueueView(operatingActions, queueState), [operatingActions, queueState]);
+  const enterpriseReadiness = useMemo(
+    () => calculateEnterpriseReadiness(opportunities, portfolioEconomics, fullQueue.open, decisions),
+    [opportunities, portfolioEconomics, fullQueue, decisions]
+  );
   const filteredQueue = useMemo(
     () => buildActionQueueView(operatingActions, queueState, { severity: severityFilter, owner: ownerFilter }),
     [operatingActions, queueState, severityFilter, ownerFilter]
@@ -192,9 +197,19 @@ function App() {
         openActions: fullQueue.open,
         completedActions: fullQueue.completed,
         agenda: weeklyAgenda,
-        decisions
+        decisions,
+        enterpriseReadiness
       }),
-    [scenario, opportunities, portfolioEconomics, portfolioContributors, fullQueue, weeklyAgenda, decisions]
+    [
+      scenario,
+      opportunities,
+      portfolioEconomics,
+      portfolioContributors,
+      fullQueue,
+      weeklyAgenda,
+      decisions,
+      enterpriseReadiness
+    ]
   );
 
   const visibleOpportunities = useMemo(() => {
@@ -396,7 +411,7 @@ function App() {
       <section className="metric-strip" aria-label="Cadence summary">
         <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />
         <Metric label="ROI" value={portfolioEconomics.roiMultiple.toFixed(1)} suffix="x" tone="amber" />
-        <Metric label="Pilot ready" value={metrics.governanceReady} suffix="items" tone="blue" />
+        <Metric label="Enterprise ready" value={enterpriseReadiness.overallScore} suffix="/100" tone="blue" />
         <Metric label="Action queue" value={openActionableCount} suffix="open" tone="red" />
       </section>
 
@@ -456,6 +471,32 @@ function App() {
             <Metric label="Payback" value={portfolioEconomics.paybackMonths} suffix="months" tone="gray" />
             <Metric label="Capacity" value={portfolioEconomics.annualHoursRecovered.toLocaleString("en-US")} suffix="hrs/yr" tone="blue" />
             <Metric label="Confidence" value={portfolioEconomics.confidenceScore} suffix="/100" tone="green" />
+          </div>
+
+          <div className="enterprise-readiness-panel">
+            <div className="section-title-row">
+              <h3>Enterprise readiness</h3>
+              <span className={`status-pill ${enterpriseReadiness.status.toLowerCase()}`}>
+                {enterpriseReadiness.status}
+              </span>
+            </div>
+            <div className="enterprise-score">
+              <strong>{enterpriseReadiness.overallScore}</strong>
+              <span>/100</span>
+              <p>{enterpriseReadiness.executiveSignal}</p>
+            </div>
+            <div className="enterprise-dimensions">
+              {enterpriseReadiness.dimensions.map((dimension) => (
+                <article key={dimension.label}>
+                  <div>
+                    <strong>{dimension.label}</strong>
+                    <span>{dimension.score}/100</span>
+                  </div>
+                  <p>{dimension.signal}</p>
+                  <em>{dimension.nextMove}</em>
+                </article>
+              ))}
+            </div>
           </div>
 
           <div className="assumption-panel">

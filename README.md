@@ -11,7 +11,7 @@ This is a working prototype of a governed CX AI portfolio operating system for V
 
 The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
 
-Version 2.0 makes the product stateful and operational: the workspace persists between sessions, the action queue can actually be worked, every workflow carries a decision log, scenario presets stress-test the economics, and a one-click board packet summarizes the week for leadership.
+Version 2.1 adds an enterprise-readiness control tower on top of the operating workflow: leadership can see whether the portfolio is actually ready to fund, scale, or hold based on value case, governance, evidence, adoption, and operating discipline.
 
 ## Client POV Review
 
@@ -23,8 +23,9 @@ From a Vena leadership perspective, the most useful version of this product is n
 4. What value is at stake?
 5. What evidence proves this is safe and useful enough to scale?
 6. Which workflows should scale, pause, or retire — and who made that call?
+7. Is this portfolio enterprise-ready enough to sponsor, or does it still need evidence and control work?
 
-The 2.0 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, and the weekly board packet is one click away.
+The 2.1 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, enterprise readiness is scored transparently, and the weekly board packet is one click away.
 
 ## Why Vena Would Care
 
@@ -46,6 +47,13 @@ Public Vena sources used for alignment:
 - [Vena Copilot for Microsoft Teams announcement](https://www.venasolutions.com/newsroom/vena-sets-new-standard-in-agentic-ai-for-fpa-with-microsoft-teams-integration)
 
 ## Feature List
+
+### Enterprise readiness control tower (new in 2.1)
+
+- Scores the portfolio across five executive dimensions: value case, governance, evidence, adoption, and operating discipline.
+- Converts readiness into a clear Ready / Watch / Blocked posture with next moves per dimension.
+- Surfaces the readiness score in the top metric strip, the Executive tab, and the weekly board packet.
+- Makes the fund/hold/scale conversation explicit: a high ROI case still cannot hide weak evidence, open approvals, or missing decisions.
 
 ### Operating state (new in 2.0)
 
@@ -72,9 +80,9 @@ Public Vena sources used for alignment:
 - Slider edits automatically flag the scenario as Custom; economics recalculate immediately.
 - The active scenario name is stamped into the business-case memo and board packet.
 
-### Board packet (new in 2.0)
+### Board packet (upgraded in 2.1)
 
-- "Copy weekly board packet" produces clipboard text with the portfolio value summary, ROI/payback/confidence, top 3 scale candidates, critical blockers, weekly agenda, latest workflow decisions, and the non-negotiable control boundary.
+- "Copy weekly board packet" produces clipboard text with the portfolio value summary, enterprise readiness score, ROI/payback/confidence, top 3 scale candidates, critical blockers, weekly agenda, latest workflow decisions, and the non-negotiable control boundary.
 - Every section handles empty states explicitly.
 
 ### Core portfolio system
@@ -90,7 +98,7 @@ Public Vena sources used for alignment:
 
 ### Executive Tab
 
-- Review modeled annual value, ROI, payback, confidence, and capacity.
+- Review modeled annual value, ROI, payback, confidence, capacity, and enterprise readiness.
 - Switch between Conservative, Base, and Aggressive scenarios, or fine-tune assumptions with the sliders.
 - Work the weekly action queue: filter by severity or owner, mark actions done, snooze to next review, and watch blocked value at stake.
 - Review the portfolio decision summary: what has been decided, what is pending.
@@ -119,7 +127,7 @@ Public Vena sources used for alignment:
 
 1. Open the Executive tab and confirm the scenario (Conservative / Base / Aggressive) for the conversation.
 2. Read the weekly action queue: clear or assign every critical and high action; snooze only with a reason.
-3. Review blocked value at stake and open approval gates.
+3. Review enterprise readiness, blocked value at stake, and open approval gates.
 4. For each workflow due for review, open the Workflow tab and record the decision with owner and evidence required.
 5. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
 6. Reset filters, confirm next review windows, and close the meeting with every action owned.
@@ -161,7 +169,7 @@ npm run build
 npm audit
 ```
 
-Verification coverage includes deterministic scoring, governance readiness, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
 
 An additional policy scan confirms no image assets or runtime AI calls:
 
