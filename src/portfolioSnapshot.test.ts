@@ -23,7 +23,7 @@ function sampleState(): SaveStateInput {
   return {
     opportunities: seedOpportunities,
     selectedId: seedOpportunities[2].id,
-    activeView: "Workflow",
+    activeView: "Boardroom",
     assumptions: { ...defaultPortfolioAssumptions, adoptionCoverage: 88 },
     scenario: "Custom",
     decisions: [decision],
@@ -45,6 +45,7 @@ describe("portfolio snapshots", () => {
 
     expect(parsed.state.opportunities).toHaveLength(seedOpportunities.length);
     expect(parsed.state.selectedId).toBe(seedOpportunities[2].id);
+    expect(parsed.state.activeView).toBe("Boardroom");
     expect(parsed.state.assumptions.adoptionCoverage).toBe(88);
     expect(parsed.state.decisions).toHaveLength(1);
     expect(parsed.state.completedActionIds).toEqual(["cx-003-measure"]);

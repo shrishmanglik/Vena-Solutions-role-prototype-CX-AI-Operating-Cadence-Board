@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { buildActionQueueView, listActionOwners, toggleActionId } from "./actionQueue";
 import type { SeverityFilter } from "./actionQueue";
 import { buildBoardPacket, CONTROL_BOUNDARY } from "./boardPacket";
+import { buildBoardroomView } from "./boardroom";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
 import {
   createDecisionRecord,
@@ -81,17 +82,18 @@ const approvalStatuses: ApprovalStatus[] = ["Required", "Ready", "Approved"];
 const checkStatuses: CheckStatus[] = ["Not started", "In review", "Passed", "Blocked"];
 const sourceTrustLevels: Array<KnowledgeSource["trust"]> = ["Needs review", "Medium", "High"];
 
-type ActiveView = "Executive" | "Portfolio" | "Pilot" | "Workflow";
+type ActiveView = "Executive" | "Boardroom" | "Portfolio" | "Pilot" | "Workflow";
 
 const workspaceViews: Array<{ id: ActiveView; label: string; summary: string }> = [
   { id: "Executive", label: "Executive", summary: "Value case" },
+  { id: "Boardroom", label: "Boardroom", summary: "Read-only packet" },
   { id: "Portfolio", label: "Portfolio", summary: "Intake and board" },
   { id: "Pilot", label: "Pilot", summary: "Plan and controls" },
   { id: "Workflow", label: "Workflow", summary: "Selected detail" }
 ];
 
 function isActiveView(value: string | null): value is ActiveView {
-  return value === "Executive" || value === "Portfolio" || value === "Pilot" || value === "Workflow";
+  return value === "Executive" || value === "Boardroom" || value === "Portfolio" || value === "Pilot" || value === "Workflow";
 }
 
 const defaultDraft: IntakeDraft = {
@@ -243,6 +245,30 @@ function App() {
   const boardPacket = useMemo(
     () =>
       buildBoardPacket({
+        scenarioName: scenario,
+        opportunities,
+        economics: portfolioEconomics,
+        contributors: portfolioContributors,
+        openActions: fullQueue.open,
+        completedActions: fullQueue.completed,
+        agenda: weeklyAgenda,
+        decisions,
+        enterpriseReadiness
+      }),
+    [
+      scenario,
+      opportunities,
+      portfolioEconomics,
+      portfolioContributors,
+      fullQueue,
+      weeklyAgenda,
+      decisions,
+      enterpriseReadiness
+    ]
+  );
+  const boardroomView = useMemo(
+    () =>
+      buildBoardroomView({
         scenarioName: scenario,
         opportunities,
         economics: portfolioEconomics,
@@ -978,6 +1004,62 @@ function App() {
         </article>
       </section>
         </>
+      )}
+
+      {activeView === "Boardroom" && (
+      <section className="boardroom-view" aria-label="Boardroom packet">
+        <div className="boardroom-hero">
+          <div>
+            <p className="eyebrow">Read-only board packet</p>
+            <h2>Leadership decision view</h2>
+            <p>{boardroomView.posture}</p>
+          </div>
+          <button className="secondary-button" type="button" onClick={() => copyToClipboard(boardPacket, setPacketCopyState)}>
+            {packetCopyState === "copied" ? "Packet copied" : packetCopyState === "failed" ? "Copy failed" : "Copy weekly board packet"}
+          </button>
+        </div>
+
+        <div className="boardroom-decision">
+          <span>Decision posture</span>
+          <strong>{boardroomView.decision}</strong>
+        </div>
+
+        <div className="boardroom-metrics">
+          {boardroomView.metrics.map((metric) => (
+            <article key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <p>{metric.helper}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="boardroom-sections">
+          {boardroomView.sections.map((section) => (
+            <article key={section.title}>
+              <h3>{section.title}</h3>
+              {section.items.length === 0 ? (
+                <p className="panel-note">{section.emptyState}</p>
+              ) : (
+                <ol>
+                  {section.items.map((item, index) => (
+                    <li key={`${section.title}-${index}`}>
+                      <strong>{item.primary}</strong>
+                      <p>{item.secondary}</p>
+                      <em>{item.meta}</em>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </article>
+          ))}
+        </div>
+
+        <div className="boardroom-boundary">
+          <strong>Control boundary</strong>
+          <p>{boardroomView.controlBoundary}</p>
+        </div>
+      </section>
       )}
 
       {activeView === "Pilot" && (

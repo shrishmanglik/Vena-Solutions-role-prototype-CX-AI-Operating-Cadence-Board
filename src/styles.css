@@ -124,7 +124,7 @@ textarea:focus-visible {
 
 .view-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin: 0 0 18px;
 }
@@ -200,6 +200,144 @@ textarea:focus-visible {
   color: #5a6678;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.boardroom-view {
+  display: grid;
+  gap: 14px;
+}
+
+.boardroom-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+
+.boardroom-hero h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.boardroom-hero p {
+  margin: 7px 0 0;
+  color: #5a6678;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.boardroom-decision {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #bfd4ee;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f5f9ff;
+}
+
+.boardroom-decision span,
+.boardroom-metrics span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.boardroom-decision strong {
+  color: var(--ink);
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.boardroom-metrics,
+.boardroom-sections {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.boardroom-metrics article,
+.boardroom-sections article,
+.boardroom-boundary {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.boardroom-metrics article {
+  min-height: 130px;
+}
+
+.boardroom-metrics strong {
+  display: block;
+  margin-top: 9px;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.boardroom-metrics p,
+.boardroom-sections p,
+.boardroom-boundary p {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.boardroom-sections {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.boardroom-sections h3 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.boardroom-sections ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.boardroom-sections li {
+  color: #475467;
+  font-size: 13px;
+}
+
+.boardroom-sections li strong {
+  display: block;
+  color: var(--ink);
+  line-height: 1.28;
+}
+
+.boardroom-sections li em {
+  display: block;
+  margin-top: 5px;
+  color: var(--blue);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.boardroom-boundary {
+  background: #fffaf3;
+}
+
+.boardroom-boundary strong {
+  color: var(--amber);
+  font-size: 13px;
+  text-transform: uppercase;
 }
 
 .alignment-grid {
@@ -1459,6 +1597,11 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, minmax(240px, 1fr));
   }
 
+  .boardroom-metrics,
+  .boardroom-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .operating-row {
     grid-template-columns: 1fr;
   }
@@ -1498,6 +1641,7 @@ textarea:focus-visible {
 
   .workspace-header,
   .panel-heading,
+  .boardroom-hero,
   .board-heading,
   .detail-title-row {
     align-items: stretch;
@@ -1518,6 +1662,8 @@ textarea:focus-visible {
   .metric-strip,
   .view-tabs,
   .leadership-strip,
+  .boardroom-metrics,
+  .boardroom-sections,
   .alignment-grid,
   .value-metric-grid,
   .intake-form,

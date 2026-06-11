@@ -7,7 +7,7 @@ import { isScenarioSelection } from "./scenarios";
 export const SNAPSHOT_SCHEMA = "vena-cx-ai-portfolio-os-snapshot";
 export const SNAPSHOT_VERSION = 1;
 
-const activeViews = ["Executive", "Portfolio", "Pilot", "Workflow"] as const;
+const activeViews = ["Executive", "Boardroom", "Portfolio", "Pilot", "Workflow"] as const;
 
 export interface PortfolioSnapshot {
   schema: typeof SNAPSHOT_SCHEMA;

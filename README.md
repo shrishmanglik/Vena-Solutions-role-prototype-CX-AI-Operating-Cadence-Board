@@ -11,7 +11,7 @@ This is a working prototype of a governed CX AI portfolio operating system for V
 
 The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
 
-Version 2.3 makes the operating state portable: reviewers can export a sanitized JSON snapshot, send it to another stakeholder, and import it back into the app without a backend or shared login.
+Version 2.4 adds a read-only Boardroom view that turns the weekly packet into a leadership decision page with posture, metrics, scale candidates, blockers, latest decisions, agenda, and the control boundary.
 
 ## Client POV Review
 
@@ -25,7 +25,7 @@ From a Vena leadership perspective, the most useful version of this product is n
 6. Which workflows should scale, pause, or retire — and who made that call?
 7. Is this portfolio enterprise-ready enough to sponsor, or does it still need evidence and control work?
 
-The 2.3 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, snapshots can move between reviewers, and the weekly board packet is one click away.
+The 2.4 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, snapshots can move between reviewers, and leadership has a read-only boardroom page for the weekly decision.
 
 ## Why Vena Would Care
 
@@ -47,6 +47,13 @@ Public Vena sources used for alignment:
 - [Vena Copilot for Microsoft Teams announcement](https://www.venasolutions.com/newsroom/vena-sets-new-standard-in-agentic-ai-for-fpa-with-microsoft-teams-integration)
 
 ## Feature List
+
+### Boardroom decision view (new in 2.4)
+
+- Adds a read-only Boardroom tab for leadership review without operational editing controls.
+- Converts the weekly packet into a structured decision page: posture, metrics, readiness watchlist, scale candidates, critical/high blockers, latest decisions, agenda, and control boundary.
+- Uses the same underlying board-packet inputs as the clipboard packet so the displayed page and copied packet stay aligned.
+- Keeps the copy-ready weekly board packet one click away from the Boardroom tab.
 
 ### Portable portfolio snapshots (new in 2.3)
 
@@ -96,9 +103,10 @@ Public Vena sources used for alignment:
 - Slider edits automatically flag the scenario as Custom; economics recalculate immediately.
 - The active scenario name is stamped into the business-case memo and board packet.
 
-### Board packet (upgraded in 2.1)
+### Board packet (upgraded in 2.4)
 
 - "Copy weekly board packet" produces clipboard text with the portfolio value summary, enterprise readiness score, ROI/payback/confidence, top 3 scale candidates, critical blockers, weekly agenda, latest workflow decisions, and the non-negotiable control boundary.
+- The Boardroom tab renders the packet as an executive-facing page for live review.
 - Every section handles empty states explicitly.
 
 ### Core portfolio system
@@ -120,6 +128,11 @@ Public Vena sources used for alignment:
 - Work the weekly action queue: filter by severity or owner, mark actions done, snooze to next review, and watch blocked value at stake.
 - Review the portfolio decision summary: what has been decided, what is pending.
 - Copy the board-ready business case memo or the full weekly board packet.
+
+### Boardroom Tab
+
+- Review the current decision posture, executive metrics, readiness watchlist, scale candidates, blockers, latest decisions, agenda, and control boundary.
+- Copy the same weekly board packet from a read-only leadership surface.
 
 ### Portfolio Tab
 
@@ -147,8 +160,9 @@ Public Vena sources used for alignment:
 3. Review enterprise readiness, blocked value at stake, and open approval gates.
 4. For each workflow due for review, open the Workflow tab and update source trust, approvals, and QA evidence before recording the decision.
 5. Record the decision with owner and evidence required.
-6. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
-7. Reset filters, confirm next review windows, and close the meeting with every action owned.
+6. Open the Boardroom tab for the leadership decision view.
+7. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
+8. Reset filters, confirm next review windows, and close the meeting with every action owned.
 
 ## Governance Posture
 
@@ -187,7 +201,7 @@ npm run build
 npm audit
 ```
 
-Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, portable snapshot export/import, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, portable snapshot export/import, boardroom view generation, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
 
 An additional policy scan confirms no image assets or runtime AI calls:
 
@@ -235,5 +249,5 @@ Private application files such as resumes, cover letters, job-description analys
 
 - Evidence capture per decision: attach usage counts, edit-reason tags, and QA results to each review window.
 - Role-based approval permissions and named reviewer assignment.
-- A read-only "board view" link that renders the packet as a page.
+- Shareable read-only boardroom link with encoded snapshot state.
 - Optional Teams webhook (behind explicit approval) to post the weekly packet where leadership already works.
