@@ -29,6 +29,7 @@ import {
   investmentGates,
   rankPortfolioContributors
 } from "./portfolio";
+import { buildPortfolioSnapshot, parsePortfolioSnapshot } from "./portfolioSnapshot";
 import {
   buildExecutiveBrief,
   calculateApprovalReadiness,
@@ -138,6 +139,11 @@ function App() {
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const [businessCaseCopyState, setBusinessCaseCopyState] = useState<CopyState>("idle");
   const [packetCopyState, setPacketCopyState] = useState<CopyState>("idle");
+  const [snapshotCopyState, setSnapshotCopyState] = useState<CopyState>("idle");
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importDraft, setImportDraft] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importedSnapshot, setImportedSnapshot] = useState(false);
   const [portfolioAssumptions, setPortfolioAssumptions] = useState(initialState.assumptions ?? getDefaultAssumptions());
   const [scenario, setScenario] = useState<ScenarioSelection>(initialState.scenario ?? "Base");
   const [activeView, setActiveView] = useState<ActiveView>(
@@ -206,6 +212,34 @@ function App() {
     () => summarizeDecisionPosture(opportunities, decisions),
     [opportunities, decisions]
   );
+  const portfolioSnapshot = useMemo(
+    () =>
+      buildPortfolioSnapshot({
+        opportunities,
+        selectedId,
+        activeView,
+        assumptions: portfolioAssumptions,
+        scenario,
+        decisions,
+        completedActionIds,
+        snoozedActionIds
+      }),
+    [
+      opportunities,
+      selectedId,
+      activeView,
+      portfolioAssumptions,
+      scenario,
+      decisions,
+      completedActionIds,
+      snoozedActionIds
+    ]
+  );
+
+  useEffect(() => {
+    setSnapshotCopyState("idle");
+  }, [portfolioSnapshot]);
+
   const boardPacket = useMemo(
     () =>
       buildBoardPacket({
@@ -276,6 +310,7 @@ function App() {
     setScenario(id);
     setBusinessCaseCopyState("idle");
     setPacketCopyState("idle");
+    setSnapshotCopyState("idle");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -285,6 +320,8 @@ function App() {
     setSelectedId(opportunity.id);
     setCopyState("idle");
     setBusinessCaseCopyState("idle");
+    setPacketCopyState("idle");
+    setSnapshotCopyState("idle");
     setStageFilter("All");
     setRiskFilter("All");
     setActiveView("Workflow");
@@ -327,6 +364,7 @@ function App() {
     setCopyState("idle");
     setBusinessCaseCopyState("idle");
     setPacketCopyState("idle");
+    setSnapshotCopyState("idle");
   }
 
   function updateSelectedApproval(index: number, status: ApprovalStatus) {
@@ -422,6 +460,41 @@ function App() {
     setSnoozedActionIds((current) => toggleActionId(current, actionId));
   }
 
+  function toggleImportPanel() {
+    setIsImportOpen((current) => !current);
+    setImportError(null);
+    setImportedSnapshot(false);
+  }
+
+  function applySnapshotImport() {
+    const parsed = parsePortfolioSnapshot(importDraft);
+
+    if (!parsed.ok) {
+      setImportError(parsed.error);
+      setImportedSnapshot(false);
+      return;
+    }
+
+    setOpportunities(parsed.state.opportunities);
+    setSelectedId(parsed.state.selectedId);
+    setActiveView(isActiveView(parsed.state.activeView) ? parsed.state.activeView : "Executive");
+    setPortfolioAssumptions(parsed.state.assumptions);
+    setScenario(parsed.state.scenario);
+    setDecisions(parsed.state.decisions);
+    setCompletedActionIds(parsed.state.completedActionIds);
+    setSnoozedActionIds(parsed.state.snoozedActionIds);
+    setStageFilter("All");
+    setRiskFilter("All");
+    setSeverityFilter("All");
+    setOwnerFilter("All");
+    setCopyState("idle");
+    setBusinessCaseCopyState("idle");
+    setPacketCopyState("idle");
+    setSnapshotCopyState("idle");
+    setImportError(null);
+    setImportedSnapshot(true);
+  }
+
   function resetDemoData() {
     const confirmed = window.confirm("Reset demo data? This clears added workflows, decisions, and action states.");
 
@@ -446,6 +519,11 @@ function App() {
     setCopyState("idle");
     setBusinessCaseCopyState("idle");
     setPacketCopyState("idle");
+    setSnapshotCopyState("idle");
+    setImportDraft("");
+    setImportError(null);
+    setImportedSnapshot(false);
+    setIsImportOpen(false);
   }
 
   async function copyToClipboard(text: string, setState: (state: CopyState) => void) {
@@ -474,11 +552,51 @@ function App() {
             <span>Build</span>
             <span>Measure</span>
           </div>
-          <button className="ghost-button" type="button" onClick={resetDemoData}>
-            Reset demo data
-          </button>
+          <div className="header-button-row">
+            <button
+              className="ghost-button"
+              type="button"
+              onClick={() => copyToClipboard(portfolioSnapshot, setSnapshotCopyState)}
+            >
+              {snapshotCopyState === "copied" ? "Snapshot copied" : snapshotCopyState === "failed" ? "Copy failed" : "Export snapshot"}
+            </button>
+            <button className="ghost-button" type="button" onClick={toggleImportPanel}>
+              Import snapshot
+            </button>
+            <button className="ghost-button" type="button" onClick={resetDemoData}>
+              Reset demo data
+            </button>
+          </div>
         </div>
       </header>
+
+      {isImportOpen && (
+        <section className="snapshot-panel" aria-label="Portfolio snapshot import">
+          <div className="section-title-row">
+            <h2>Import portfolio snapshot</h2>
+            <button className="mini-button" type="button" onClick={toggleImportPanel}>
+              Close
+            </button>
+          </div>
+          <textarea
+            value={importDraft}
+            onChange={(event) => {
+              setImportDraft(event.target.value);
+              setImportError(null);
+              setImportedSnapshot(false);
+            }}
+            rows={6}
+            placeholder="Paste a Vena CX AI Portfolio OS snapshot JSON export here."
+          />
+          <div className="snapshot-actions">
+            <button className="secondary-button" type="button" onClick={applySnapshotImport}>
+              Import snapshot
+            </button>
+            {importError && <span className="form-error">{importError}</span>}
+            {importedSnapshot && !importError && <span className="form-success">Snapshot imported.</span>}
+          </div>
+        </section>
+      )}
 
       <section className="metric-strip" aria-label="Cadence summary">
         <Metric label="Modeled value" value={formatCompactCurrency(portfolioEconomics.annualizedValue)} suffix="/yr" tone="green" />

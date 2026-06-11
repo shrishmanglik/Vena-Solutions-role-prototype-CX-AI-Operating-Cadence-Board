@@ -11,7 +11,7 @@ This is a working prototype of a governed CX AI portfolio operating system for V
 
 The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
 
-Version 2.2 turns the workflow evidence layer into an operating surface: source trust, approval status, and QA evidence can be updated directly from the Workflow tab, with audit-log entries and readiness/action-queue recalculation after every change.
+Version 2.3 makes the operating state portable: reviewers can export a sanitized JSON snapshot, send it to another stakeholder, and import it back into the app without a backend or shared login.
 
 ## Client POV Review
 
@@ -25,7 +25,7 @@ From a Vena leadership perspective, the most useful version of this product is n
 6. Which workflows should scale, pause, or retire — and who made that call?
 7. Is this portfolio enterprise-ready enough to sponsor, or does it still need evidence and control work?
 
-The 2.2 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, and the weekly board packet is one click away.
+The 2.3 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, snapshots can move between reviewers, and the weekly board packet is one click away.
 
 ## Why Vena Would Care
 
@@ -48,6 +48,13 @@ Public Vena sources used for alignment:
 
 ## Feature List
 
+### Portable portfolio snapshots (new in 2.3)
+
+- Export the full operating state as sanitized JSON: workflows, evidence controls, decisions, assumptions, scenario, selected workflow, and action states.
+- Import a snapshot pasted from another reviewer; invalid JSON, unsupported schema, missing workflows, and bad assumptions fail with visible errors.
+- Snapshot import resets filters and restores the selected workflow, decisions, completed actions, snoozed actions, and active workspace view.
+- This gives the prototype a lightweight collaboration path without adding accounts, backend storage, or customer data.
+
 ### Evidence operations controls (new in 2.2)
 
 - Update source trust, approval status, and QA evidence directly inside the Workflow tab.
@@ -66,6 +73,7 @@ Public Vena sources used for alignment:
 
 - Local persistence: added workflows, stage changes, decisions, action states, assumptions, scenario, selected workflow, and active tab survive a refresh.
 - Defensive state migration: corrupted or outdated saved data is discarded slice-by-slice instead of crashing the app.
+- Portable snapshots can be exported and imported to share a reviewed portfolio between stakeholders.
 - One-click "Reset demo data" control to return to the seeded portfolio.
 
 ### Decision records (new in 2.0)
@@ -107,6 +115,7 @@ Public Vena sources used for alignment:
 ### Executive Tab
 
 - Review modeled annual value, ROI, payback, confidence, capacity, and enterprise readiness.
+- Export or import a portfolio snapshot from the header when moving a review state between people.
 - Switch between Conservative, Base, and Aggressive scenarios, or fine-tune assumptions with the sliders.
 - Work the weekly action queue: filter by severity or owner, mark actions done, snooze to next review, and watch blocked value at stake.
 - Review the portfolio decision summary: what has been decided, what is pending.
@@ -178,7 +187,7 @@ npm run build
 npm audit
 ```
 
-Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, portable snapshot export/import, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
 
 An additional policy scan confirms no image assets or runtime AI calls:
 
@@ -217,7 +226,7 @@ Private application files such as resumes, cover letters, job-description analys
 
 ## Known Limitations
 
-- State lives in the viewer's browser only; there is no backend, multi-user sync, or authentication. Two people see two different portfolios.
+- State lives in the viewer's browser only; there is no backend, real-time multi-user sync, or authentication. Reviewers can transfer state through exported snapshots.
 - Economics are a planning model with fictional inputs, not measured telemetry.
 - Snooze is a "until next review" toggle, not a timed reminder.
 - Copy buttons require browser clipboard permission and a focused document; the UI reports failure rather than silently dropping.
@@ -226,6 +235,5 @@ Private application files such as resumes, cover letters, job-description analys
 
 - Evidence capture per decision: attach usage counts, edit-reason tags, and QA results to each review window.
 - Role-based approval permissions and named reviewer assignment.
-- Import/export of portfolio state as JSON for sharing between reviewers.
 - A read-only "board view" link that renders the packet as a page.
 - Optional Teams webhook (behind explicit approval) to post the weekly packet where leadership already works.
