@@ -38,7 +38,7 @@ function isActiveView(value: unknown): value is SaveStateInput["activeView"] {
   return activeViews.includes(value as (typeof activeViews)[number]);
 }
 
-export function buildPortfolioSnapshot(input: SaveStateInput, exportedAt = new Date().toISOString()): string {
+export function buildPortfolioSnapshot(input: SaveStateInput, exportedAt = new Date().toISOString(), space: number | undefined = 2): string {
   const snapshot: PortfolioSnapshot = {
     schema: SNAPSHOT_SCHEMA,
     version: SNAPSHOT_VERSION,
@@ -46,7 +46,7 @@ export function buildPortfolioSnapshot(input: SaveStateInput, exportedAt = new D
     state: input
   };
 
-  return JSON.stringify(snapshot, null, 2);
+  return JSON.stringify(snapshot, null, space);
 }
 
 export function parsePortfolioSnapshot(raw: string): SnapshotParseResult {

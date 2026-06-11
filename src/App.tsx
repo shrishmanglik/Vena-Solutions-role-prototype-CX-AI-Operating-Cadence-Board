@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { buildActionQueueView, listActionOwners, toggleActionId } from "./actionQueue";
 import type { SeverityFilter } from "./actionQueue";
 import { buildBoardPacket, CONTROL_BOUNDARY } from "./boardPacket";
+import { buildBoardroomShareUrl, parseBoardroomShareHash } from "./boardroomShareLink";
 import { buildBoardroomView } from "./boardroom";
 import { createOpportunityFromDraft, seedOpportunities, STAGES } from "./data";
 import {
@@ -18,8 +19,10 @@ import {
   clearPersistedState,
   getDefaultAssumptions,
   loadPersistedState,
-  savePersistedState
+  savePersistedState,
+  STORAGE_VERSION
 } from "./persistence";
+import type { PersistedState } from "./persistence";
 import {
   buildPortfolioBusinessCase,
   buildOperatingActions,
@@ -130,7 +133,46 @@ function nowStamp(): string {
 
 type CopyState = "idle" | "copied" | "failed";
 
-const initialState = loadPersistedState();
+interface InitialAppState {
+  state: PersistedState;
+  shareMessage: string | null;
+  shareError: string | null;
+}
+
+function loadInitialAppState(): InitialAppState {
+  const shared = typeof window === "undefined" ? null : parseBoardroomShareHash(window.location.hash);
+
+  if (shared?.ok) {
+    return {
+      state: {
+        version: STORAGE_VERSION,
+        opportunities: shared.state.opportunities,
+        selectedId: shared.state.selectedId,
+        activeView: "Boardroom",
+        assumptions: shared.state.assumptions,
+        scenario: shared.state.scenario,
+        decisions: shared.state.decisions,
+        completedActionIds: shared.state.completedActionIds,
+        snoozedActionIds: shared.state.snoozedActionIds
+      },
+      shareMessage: "Loaded Boardroom snapshot from shared link.",
+      shareError: null
+    };
+  }
+
+  if (shared && !shared.ok) {
+    return {
+      state: loadPersistedState(),
+      shareMessage: null,
+      shareError: `Shared Boardroom link could not load: ${shared.error}`
+    };
+  }
+
+  return { state: loadPersistedState(), shareMessage: null, shareError: null };
+}
+
+const initialAppState = loadInitialAppState();
+const initialState = initialAppState.state;
 
 function App() {
   const [opportunities, setOpportunities] = useState<AiOpportunity[]>(initialState.opportunities ?? seedOpportunities);
@@ -142,10 +184,13 @@ function App() {
   const [businessCaseCopyState, setBusinessCaseCopyState] = useState<CopyState>("idle");
   const [packetCopyState, setPacketCopyState] = useState<CopyState>("idle");
   const [snapshotCopyState, setSnapshotCopyState] = useState<CopyState>("idle");
+  const [boardroomLinkCopyState, setBoardroomLinkCopyState] = useState<CopyState>("idle");
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importDraft, setImportDraft] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [importedSnapshot, setImportedSnapshot] = useState(false);
+  const [shareMessage, setShareMessage] = useState(initialAppState.shareMessage);
+  const [shareError, setShareError] = useState(initialAppState.shareError);
   const [portfolioAssumptions, setPortfolioAssumptions] = useState(initialState.assumptions ?? getDefaultAssumptions());
   const [scenario, setScenario] = useState<ScenarioSelection>(initialState.scenario ?? "Base");
   const [activeView, setActiveView] = useState<ActiveView>(
@@ -237,10 +282,44 @@ function App() {
       snoozedActionIds
     ]
   );
+  const boardroomShareSnapshot = useMemo(
+    () =>
+      buildPortfolioSnapshot(
+        {
+          opportunities,
+          selectedId,
+          activeView: "Boardroom",
+          assumptions: portfolioAssumptions,
+          scenario,
+          decisions,
+          completedActionIds,
+          snoozedActionIds
+        },
+        new Date().toISOString(),
+        0
+      ),
+    [
+      opportunities,
+      selectedId,
+      portfolioAssumptions,
+      scenario,
+      decisions,
+      completedActionIds,
+      snoozedActionIds
+    ]
+  );
+  const boardroomShareUrl = useMemo(
+    () => (typeof window === "undefined" ? "" : buildBoardroomShareUrl(boardroomShareSnapshot, window.location.href)),
+    [boardroomShareSnapshot]
+  );
 
   useEffect(() => {
     setSnapshotCopyState("idle");
   }, [portfolioSnapshot]);
+
+  useEffect(() => {
+    setBoardroomLinkCopyState("idle");
+  }, [boardroomShareUrl]);
 
   const boardPacket = useMemo(
     () =>
@@ -519,6 +598,8 @@ function App() {
     setSnapshotCopyState("idle");
     setImportError(null);
     setImportedSnapshot(true);
+    setShareMessage(null);
+    setShareError(null);
   }
 
   function resetDemoData() {
@@ -550,6 +631,8 @@ function App() {
     setImportError(null);
     setImportedSnapshot(false);
     setIsImportOpen(false);
+    setShareMessage(null);
+    setShareError(null);
   }
 
   async function copyToClipboard(text: string, setState: (state: CopyState) => void) {
@@ -621,6 +704,22 @@ function App() {
             {importError && <span className="form-error">{importError}</span>}
             {importedSnapshot && !importError && <span className="form-success">Snapshot imported.</span>}
           </div>
+        </section>
+      )}
+
+      {(shareMessage || shareError) && (
+        <section className={`share-banner ${shareError ? "error" : ""}`} aria-label="Shared boardroom link status">
+          <span>{shareError ?? shareMessage}</span>
+          <button
+            className="mini-button"
+            type="button"
+            onClick={() => {
+              setShareMessage(null);
+              setShareError(null);
+            }}
+          >
+            Dismiss
+          </button>
         </section>
       )}
 
@@ -1014,9 +1113,18 @@ function App() {
             <h2>Leadership decision view</h2>
             <p>{boardroomView.posture}</p>
           </div>
-          <button className="secondary-button" type="button" onClick={() => copyToClipboard(boardPacket, setPacketCopyState)}>
-            {packetCopyState === "copied" ? "Packet copied" : packetCopyState === "failed" ? "Copy failed" : "Copy weekly board packet"}
-          </button>
+          <div className="boardroom-actions">
+            <button className="secondary-button" type="button" onClick={() => copyToClipboard(boardPacket, setPacketCopyState)}>
+              {packetCopyState === "copied" ? "Packet copied" : packetCopyState === "failed" ? "Copy failed" : "Copy weekly board packet"}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => copyToClipboard(boardroomShareUrl, setBoardroomLinkCopyState)}
+            >
+              {boardroomLinkCopyState === "copied" ? "Link copied" : boardroomLinkCopyState === "failed" ? "Copy failed" : "Copy Boardroom link"}
+            </button>
+          </div>
         </div>
 
         <div className="boardroom-decision">

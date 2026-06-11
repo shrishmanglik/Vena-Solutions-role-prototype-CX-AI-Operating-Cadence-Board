@@ -1762,6 +1762,33 @@ textarea:focus-visible {
   gap: 10px;
 }
 
+.share-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #b7dfd0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #17624e;
+  background: var(--green-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.share-banner.error {
+  border-color: #f1b8b8;
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.boardroom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
+}
+
 .heading-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -2175,6 +2202,15 @@ textarea:focus-visible {
 
   .header-button-row {
     justify-content: start;
+  }
+
+  .boardroom-actions {
+    justify-content: start;
+  }
+
+  .share-banner {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .scenario-row,

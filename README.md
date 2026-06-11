@@ -11,7 +11,7 @@ This is a working prototype of a governed CX AI portfolio operating system for V
 
 The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
 
-Version 2.4 adds a read-only Boardroom view that turns the weekly packet into a leadership decision page with posture, metrics, scale candidates, blockers, latest decisions, agenda, and the control boundary.
+Version 2.5 adds shareable Boardroom links with encoded snapshot state, so a Vena stakeholder can open the exact read-only review view without manually importing JSON.
 
 ## Client POV Review
 
@@ -25,7 +25,7 @@ From a Vena leadership perspective, the most useful version of this product is n
 6. Which workflows should scale, pause, or retire — and who made that call?
 7. Is this portfolio enterprise-ready enough to sponsor, or does it still need evidence and control work?
 
-The 2.4 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, snapshots can move between reviewers, and leadership has a read-only boardroom page for the weekly decision.
+The 2.5 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, snapshots can move between reviewers, and leadership can open a shared Boardroom link for the weekly decision.
 
 ## Why Vena Would Care
 
@@ -48,12 +48,19 @@ Public Vena sources used for alignment:
 
 ## Feature List
 
+### Shareable Boardroom links (new in 2.5)
+
+- Copy a read-only Boardroom link that embeds the current sanitized portfolio snapshot in the URL hash.
+- Opening the link loads the encoded snapshot directly into the Boardroom tab and shows a visible loaded/error banner.
+- Uses the same snapshot sanitizer as manual import, rejecting unreadable links, unsupported schema, invalid workflows, and bad assumptions.
+- Keeps collaboration backend-free while making the leadership review state one-click shareable.
+
 ### Boardroom decision view (new in 2.4)
 
 - Adds a read-only Boardroom tab for leadership review without operational editing controls.
 - Converts the weekly packet into a structured decision page: posture, metrics, readiness watchlist, scale candidates, critical/high blockers, latest decisions, agenda, and control boundary.
 - Uses the same underlying board-packet inputs as the clipboard packet so the displayed page and copied packet stay aligned.
-- Keeps the copy-ready weekly board packet one click away from the Boardroom tab.
+- Keeps the copy-ready weekly board packet and shareable Boardroom link one click away from the Boardroom tab.
 
 ### Portable portfolio snapshots (new in 2.3)
 
@@ -132,7 +139,7 @@ Public Vena sources used for alignment:
 ### Boardroom Tab
 
 - Review the current decision posture, executive metrics, readiness watchlist, scale candidates, blockers, latest decisions, agenda, and control boundary.
-- Copy the same weekly board packet from a read-only leadership surface.
+- Copy the same weekly board packet or a shareable Boardroom link from a read-only leadership surface.
 
 ### Portfolio Tab
 
@@ -201,7 +208,7 @@ npm run build
 npm audit
 ```
 
-Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, portable snapshot export/import, boardroom view generation, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, portable snapshot export/import, encoded Boardroom share links, boardroom view generation, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
 
 An additional policy scan confirms no image assets or runtime AI calls:
 
@@ -240,7 +247,7 @@ Private application files such as resumes, cover letters, job-description analys
 
 ## Known Limitations
 
-- State lives in the viewer's browser only; there is no backend, real-time multi-user sync, or authentication. Reviewers can transfer state through exported snapshots.
+- State lives in the viewer's browser only; there is no backend, real-time multi-user sync, or authentication. Reviewers can transfer state through exported snapshots or encoded Boardroom links.
 - Economics are a planning model with fictional inputs, not measured telemetry.
 - Snooze is a "until next review" toggle, not a timed reminder.
 - Copy buttons require browser clipboard permission and a focused document; the UI reports failure rather than silently dropping.
@@ -249,5 +256,5 @@ Private application files such as resumes, cover letters, job-description analys
 
 - Evidence capture per decision: attach usage counts, edit-reason tags, and QA results to each review window.
 - Role-based approval permissions and named reviewer assignment.
-- Shareable read-only boardroom link with encoded snapshot state.
+- Server-backed team workspace with authentication, comments, and named reviewer assignments.
 - Optional Teams webhook (behind explicit approval) to post the weekly packet where leadership already works.
