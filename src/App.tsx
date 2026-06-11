@@ -48,7 +48,23 @@ import {
   pilotRoadmap,
   platformFitByArea
 } from "./strategy";
-import type { AiOpportunity, CxArea, IntakeDraft, RiskTier, SensitivityLevel, WorkflowStage } from "./types";
+import type {
+  AiOpportunity,
+  ApprovalStatus,
+  CheckStatus,
+  CxArea,
+  IntakeDraft,
+  KnowledgeSource,
+  RiskTier,
+  SensitivityLevel,
+  WorkflowStage
+} from "./types";
+import {
+  clearWorkflowActionState,
+  updateApprovalStatus,
+  updateQualityCheckStatus,
+  updateSourceTrust
+} from "./workflowControls";
 
 const cxAreas: CxArea[] = [
   "Professional Services",
@@ -60,6 +76,9 @@ const cxAreas: CxArea[] = [
 const sensitivities: SensitivityLevel[] = ["Low", "Moderate", "Sensitive", "Restricted"];
 const riskFilters: Array<RiskTier | "All"> = ["All", "High", "Medium", "Low"];
 const severityFilters: SeverityFilter[] = ["All", "Critical", "High", "Medium", "Watch"];
+const approvalStatuses: ApprovalStatus[] = ["Required", "Ready", "Approved"];
+const checkStatuses: CheckStatus[] = ["Not started", "In review", "Passed", "Blocked"];
+const sourceTrustLevels: Array<KnowledgeSource["trust"]> = ["Needs review", "Medium", "High"];
 
 type ActiveView = "Executive" | "Portfolio" | "Pilot" | "Workflow";
 
@@ -300,6 +319,59 @@ function App() {
           : item
       )
     );
+  }
+
+  function clearSelectedWorkflowQueueState(workflowId: string) {
+    setCompletedActionIds((current) => clearWorkflowActionState(workflowId, current));
+    setSnoozedActionIds((current) => clearWorkflowActionState(workflowId, current));
+    setCopyState("idle");
+    setBusinessCaseCopyState("idle");
+    setPacketCopyState("idle");
+  }
+
+  function updateSelectedApproval(index: number, status: ApprovalStatus) {
+    if (!selected) {
+      return;
+    }
+
+    const timestamp = nowStamp();
+
+    setOpportunities((current) =>
+      current.map((item) =>
+        item.id === selected.id ? updateApprovalStatus(item, index, status, "CX AI Architect", timestamp) : item
+      )
+    );
+    clearSelectedWorkflowQueueState(selected.id);
+  }
+
+  function updateSelectedQualityCheck(index: number, status: CheckStatus) {
+    if (!selected) {
+      return;
+    }
+
+    const timestamp = nowStamp();
+
+    setOpportunities((current) =>
+      current.map((item) =>
+        item.id === selected.id ? updateQualityCheckStatus(item, index, status, "CX AI Architect", timestamp) : item
+      )
+    );
+    clearSelectedWorkflowQueueState(selected.id);
+  }
+
+  function updateSelectedSourceTrust(index: number, trust: KnowledgeSource["trust"]) {
+    if (!selected) {
+      return;
+    }
+
+    const timestamp = nowStamp();
+
+    setOpportunities((current) =>
+      current.map((item) =>
+        item.id === selected.id ? updateSourceTrust(item, index, trust, "CX AI Architect", timestamp) : item
+      )
+    );
+    clearSelectedWorkflowQueueState(selected.id);
   }
 
   function recordDecision(input: {
@@ -1154,10 +1226,13 @@ function App() {
           </div>
 
           <DetailList title="Vena platform fit" items={platformFitByArea[selected.cxArea]} />
-          <DetailList title="RAG / source map" items={selected.knowledgeSources.map((source) => `${source.name} | ${source.owner} | ${source.trust}`)} />
+          <EvidenceControlPanel
+            opportunity={selected}
+            onApprovalStatusChange={updateSelectedApproval}
+            onQualityStatusChange={updateSelectedQualityCheck}
+            onSourceTrustChange={updateSelectedSourceTrust}
+          />
           <DetailList title="Tool and API action plan" items={selected.integrationPlan.map((step) => `${step.system}: ${step.action}. Approval: ${step.approval}`)} />
-          <DetailList title="Human approval points" items={selected.approvals.map((approval) => `${approval.label} | ${approval.owner} | ${approval.status}`)} />
-          <DetailList title="QA and evaluation" items={selected.qaChecklist.map((check) => `${check.label} | ${check.status}`)} />
           <DetailList title="Release and handoff" items={selected.releaseNotes} />
           <DetailList title="Adoption playbook" items={selected.adoptionPlaybook} />
 
@@ -1224,6 +1299,92 @@ function createDecisionRecordSafe(
       nextReviewWindow: input.nextReviewWindow
     },
     sequence
+  );
+}
+
+function EvidenceControlPanel({
+  opportunity,
+  onApprovalStatusChange,
+  onQualityStatusChange,
+  onSourceTrustChange
+}: {
+  opportunity: AiOpportunity;
+  onApprovalStatusChange: (index: number, status: ApprovalStatus) => void;
+  onQualityStatusChange: (index: number, status: CheckStatus) => void;
+  onSourceTrustChange: (index: number, trust: KnowledgeSource["trust"]) => void;
+}) {
+  return (
+    <div className="detail-section evidence-control-section">
+      <div className="section-title-row">
+        <h3>Evidence controls</h3>
+        <span>{calculateGovernanceReadiness(opportunity)}/100 ready</span>
+      </div>
+
+      <div className="evidence-control-grid">
+        <section>
+          <h4>Sources</h4>
+          {opportunity.knowledgeSources.map((source, index) => (
+            <label className="evidence-control-row" key={`${source.name}-${index}`}>
+              <span>
+                <strong>{source.name}</strong>
+                <em>{source.owner}</em>
+              </span>
+              <select
+                aria-label={`${source.name} source trust`}
+                value={source.trust}
+                onChange={(event) => onSourceTrustChange(index, event.target.value as KnowledgeSource["trust"])}
+              >
+                {sourceTrustLevels.map((level) => (
+                  <option key={level}>{level}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </section>
+
+        <section>
+          <h4>Approvals</h4>
+          {opportunity.approvals.map((approval, index) => (
+            <label className="evidence-control-row" key={`${approval.label}-${index}`}>
+              <span>
+                <strong>{approval.label}</strong>
+                <em>{approval.owner}</em>
+              </span>
+              <select
+                aria-label={`${approval.label} approval status`}
+                value={approval.status}
+                onChange={(event) => onApprovalStatusChange(index, event.target.value as ApprovalStatus)}
+              >
+                {approvalStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </section>
+
+        <section>
+          <h4>QA evidence</h4>
+          {opportunity.qaChecklist.map((check, index) => (
+            <label className="evidence-control-row" key={`${check.label}-${index}`}>
+              <span>
+                <strong>{check.label}</strong>
+                <em>Evaluation gate</em>
+              </span>
+              <select
+                aria-label={`${check.label} QA status`}
+                value={check.status}
+                onChange={(event) => onQualityStatusChange(index, event.target.value as CheckStatus)}
+              >
+                {checkStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </section>
+      </div>
+    </div>
   );
 }
 

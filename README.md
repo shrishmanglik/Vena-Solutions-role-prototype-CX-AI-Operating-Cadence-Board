@@ -11,11 +11,11 @@ This is a working prototype of a governed CX AI portfolio operating system for V
 
 The goal is not to simulate an AI chatbot. The goal is to show the operating system a Customer Experience AI Architect would need at Vena: choose the right workflows, ground them in trusted business sources, keep Microsoft-native work habits intact, enforce human approval gates, assign weekly actions, record explicit fund/hold/scale/pause/retire decisions, and prove pilot value with economics and evidence.
 
-Version 2.1 adds an enterprise-readiness control tower on top of the operating workflow: leadership can see whether the portfolio is actually ready to fund, scale, or hold based on value case, governance, evidence, adoption, and operating discipline.
+Version 2.2 turns the workflow evidence layer into an operating surface: source trust, approval status, and QA evidence can be updated directly from the Workflow tab, with audit-log entries and readiness/action-queue recalculation after every change.
 
 ## Client POV Review
 
-From a Vena leadership perspective, the most useful version of this product is not a large dashboard. It is a weekly operating surface that answers six practical questions:
+From a Vena leadership perspective, the most useful version of this product is not a large dashboard. It is a weekly operating surface that answers seven practical questions:
 
 1. What should we fund?
 2. What is blocked?
@@ -25,7 +25,7 @@ From a Vena leadership perspective, the most useful version of this product is n
 6. Which workflows should scale, pause, or retire — and who made that call?
 7. Is this portfolio enterprise-ready enough to sponsor, or does it still need evidence and control work?
 
-The 2.1 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, enterprise readiness is scored transparently, and the weekly board packet is one click away.
+The 2.2 refinement turns the prototype from a presentation artifact into software a CX leadership team could pilot internally: state persists, actions complete and snooze, decisions are recorded with owners and review windows, evidence controls update the portfolio, enterprise readiness is scored transparently, and the weekly board packet is one click away.
 
 ## Why Vena Would Care
 
@@ -47,6 +47,13 @@ Public Vena sources used for alignment:
 - [Vena Copilot for Microsoft Teams announcement](https://www.venasolutions.com/newsroom/vena-sets-new-standard-in-agentic-ai-for-fpa-with-microsoft-teams-integration)
 
 ## Feature List
+
+### Evidence operations controls (new in 2.2)
+
+- Update source trust, approval status, and QA evidence directly inside the Workflow tab.
+- Every evidence-control change writes an audit-log entry with actor, timestamp, previous state, and new state.
+- Readiness gates, enterprise readiness, operating actions, scale candidates, board packet, and business-case economics recalculate from the changed workflow state.
+- Stale done/snooze action flags are cleared for the changed workflow so reopened blockers are visible immediately.
 
 ### Enterprise readiness control tower (new in 2.1)
 
@@ -71,6 +78,7 @@ Public Vena sources used for alignment:
 
 - Severity and owner filters.
 - Mark done, snooze, restore, and reopen — with a compact "completed this week" section so cleared work stays visible.
+- Underlying evidence-control edits can now close or reopen workflow blockers instead of leaving the queue detached from gate state.
 - Urgent count and blocked value at stake across open critical/high actions.
 - Top 5 open actions surfaced on the Executive tab.
 
@@ -91,7 +99,7 @@ Public Vena sources used for alignment:
 - A deterministic executive business-case engine with modeled annual value, ROI multiple, payback, confidence, and scale assumptions.
 - A governed board across intake, scored, build/QA, and released stages with stage and risk filters.
 - Vena-specific workflow examples for Excel implementation workbooks, Teams adoption briefs, FP&A variance narratives, and enablement answer-bank freshness.
-- Source maps for RAG and tool usage, human approval points, QA/evaluation readiness, release notes, adoption playbooks, impact modeling, and audit logs.
+- Editable source maps for RAG, human approval points, QA/evaluation readiness, tool usage plans, release notes, adoption playbooks, impact modeling, and audit logs.
 - A 90-day pilot roadmap with evidence requirements, delivery architecture, and investment gates.
 
 ## How To Use Each Tab
@@ -118,7 +126,7 @@ Public Vena sources used for alignment:
 
 ### Workflow Tab
 
-- Review the selected workflow's readiness gates, source map, tool plan, approvals, QA checks, release notes, adoption playbook, impact model, and audit log.
+- Review and update the selected workflow's readiness gates, source trust, approvals, QA checks, tool plan, release notes, adoption playbook, impact model, and audit log.
 - Move the workflow across intake, scored, build/QA, and released stages.
 - Record a Fund / Hold / Scale / Pause / Retire decision with owner, reason, evidence required, and next review window; review the full decision history.
 - Copy the workflow-specific executive handoff brief, which includes the latest decision.
@@ -128,9 +136,10 @@ Public Vena sources used for alignment:
 1. Open the Executive tab and confirm the scenario (Conservative / Base / Aggressive) for the conversation.
 2. Read the weekly action queue: clear or assign every critical and high action; snooze only with a reason.
 3. Review enterprise readiness, blocked value at stake, and open approval gates.
-4. For each workflow due for review, open the Workflow tab and record the decision with owner and evidence required.
-5. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
-6. Reset filters, confirm next review windows, and close the meeting with every action owned.
+4. For each workflow due for review, open the Workflow tab and update source trust, approvals, and QA evidence before recording the decision.
+5. Record the decision with owner and evidence required.
+6. Copy the weekly board packet and paste it into the leadership channel or meeting notes.
+7. Reset filters, confirm next review windows, and close the meeting with every action owned.
 
 ## Governance Posture
 
@@ -169,7 +178,7 @@ npm run build
 npm audit
 ```
 
-Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
+Verification coverage includes deterministic scoring, governance readiness, enterprise-readiness scoring, workflow evidence-control updates, strategy layer, portfolio economics, scenario planner economics, decision-record validation and summaries, action-queue completion/snooze state, board-packet content and empty states, and persistence round-trips with corrupted-data handling.
 
 An additional policy scan confirms no image assets or runtime AI calls:
 
@@ -209,7 +218,6 @@ Private application files such as resumes, cover letters, job-description analys
 ## Known Limitations
 
 - State lives in the viewer's browser only; there is no backend, multi-user sync, or authentication. Two people see two different portfolios.
-- Operating actions are derived deterministically from workflow state; completing an action does not change the underlying approval or QA status (those are sample data).
 - Economics are a planning model with fictional inputs, not measured telemetry.
 - Snooze is a "until next review" toggle, not a timed reminder.
 - Copy buttons require browser clipboard permission and a focused document; the UI reports failure rather than silently dropping.
@@ -217,7 +225,7 @@ Private application files such as resumes, cover letters, job-description analys
 ## Future Roadmap
 
 - Evidence capture per decision: attach usage counts, edit-reason tags, and QA results to each review window.
-- Approval and QA status editing with role-based gates, so the action queue closes itself from real state changes.
+- Role-based approval permissions and named reviewer assignment.
 - Import/export of portfolio state as JSON for sharing between reviewers.
 - A read-only "board view" link that renders the packet as a page.
 - Optional Teams webhook (behind explicit approval) to post the weekly packet where leadership already works.
